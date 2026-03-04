@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
@@ -21,8 +20,25 @@ namespace QaaS.Common.Assertions.Tests.SchemaLogicTests;
 [TestFixture]
 public class JsonOutputSchemaTests
 {
-    private static readonly string ComplexValidJsonSchema = File.ReadAllText(Path.Join("TestData", "Json", "complexJsonSchema.json"));
-    private static readonly string ComplexJson = File.ReadAllText(Path.Join("TestData", "Json", "complexValidJson.json"));
+    private const string ComplexValidJsonSchema = @"{
+        ""$schema"": ""http://json-schema.org/draft-07/schema#"",
+        ""type"": ""object"",
+        ""properties"": {
+            ""name"": { ""type"": ""string"" },
+            ""age"": { ""type"": ""integer"" },
+            ""roles"": {
+                ""type"": ""array"",
+                ""items"": { ""type"": ""string"" }
+            }
+        },
+        ""required"": [""name"", ""age"", ""roles""]
+    }";
+
+    private const string ComplexJson = @"{
+        ""name"": ""Alice"",
+        ""age"": 30,
+        ""roles"": [""admin"", ""operator""]
+    }";
     private const string InvalidJsonSchema = @"{
         ""$schema"": ""http://json-schema.org/draft-07/schema#"",
         ""id"": ""http://JschemaBuddy.net"",
@@ -185,8 +201,8 @@ public class JsonOutputSchemaTests
     {
         new TestCaseData(new List<object>{null}).SetName("OneNullOutput"),
         new TestCaseData(new List<object>{null, null, null}).SetName("MultipleNullOutputs"),
-        new TestCaseData(new List<object>{"REDA"}).SetName("SingleInvalidOutput"),
-        new TestCaseData(new List<object>{"REDA", "REDA", "REDA"})
+        new TestCaseData(new List<object>{"not-json"}).SetName("SingleInvalidOutput"),
+        new TestCaseData(new List<object>{"not-json", "not-json", "not-json"})
             .SetName("MultipleInvalidOutputs"),
     };
     

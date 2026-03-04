@@ -20,7 +20,7 @@ public class BinaryOutputJsonSchemaTests
         var testObject = new TestBinaryClass
         {
             IntegerProperty = 1,
-            StringProperty = "REDA",
+            StringProperty = "SampleText",
             DoubleProperty = 1.2
         };
         var assertion = new ObjectOutputJsonSchema();
@@ -31,5 +31,8 @@ public class BinaryOutputJsonSchemaTests
         
         // Assert
         Assert.AreEqual(3, json?.AsObject().Count);
+        Assert.AreEqual(testObject.IntegerProperty, json?["IntegerProperty"]?.GetValue<int>());
+        Assert.AreEqual(testObject.StringProperty, json?["StringProperty"]?.GetValue<string>());
+        Assert.AreEqual(testObject.DoubleProperty, json?["DoubleProperty"]?.GetValue<double>());
     }
 }

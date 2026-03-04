@@ -13,13 +13,13 @@ public class JsonConverterTests
 {
     private static readonly JsonObject Json = new()
     {
-        { "name", "REDA" },
+        { "name", "Alice" },
         { "age", "20" },
         { "gender", "female" },
         {
             "address", new JsonObject()
             {
-                { "city", "REDA" }
+                { "city", "Boston" }
             }
         }
     };
@@ -45,15 +45,15 @@ public class JsonConverterTests
             .SetName("Json"),
         new TestCaseData(
                 new XElement("map",
-                    new XElement("name", "REDA"),
+                    new XElement("name", "Alice"),
                     new XElement("age", "20"),
                     new XElement("gender", "female"),
                     new XElement("address",
-                        new XElement("city", "REDA"))
+                        new XElement("city", "Boston"))
                 ), JsonConverterType.Xml, new JsonObject { { "map", Json.DeepClone() } })
             .SetName("Xml"),
         new TestCaseData(new YamlObject
-                    { name = "REDA", age = "20", gender = "female", address = new Address { city = "REDA" } },
+                    { name = "Alice", age = "20", gender = "female", address = new Address { city = "Boston" } },
                 JsonConverterType.Object, Json.DeepClone())
             .SetName("Yaml"),
     };

@@ -19,20 +19,20 @@ public class AssertionOutputContentByExpectedCsvResultsTests
 
     private static readonly JsonObject Json = new()
     {
-        { "name", "REDA" },
+        { "name", "Alice" },
         { "age", "20" },
         { "gender", "female" },
         {
             "address", new JsonObject()
             {
-                { "city", "REDA" }
+                { "city", "Boston" }
             }
         }
     };
     
     private static IEnumerable<TestCaseData> _singleSessionAssert = new[]
     {
-        new TestCaseData(Json, "resultsKey", "NAME,AGE,CITY,GENDER\nREDA,21,REDA,girl",
+        new TestCaseData(Json, "resultsKey", "NAME,AGE,CITY,GENDER\nAlice,21,Boston,girl",
                 new Dictionary<string, FieldConfiguration>
                 {
                     {
@@ -85,7 +85,7 @@ public class AssertionOutputContentByExpectedCsvResultsTests
                     }
                 }, true,"100% match","")
             .SetName("ValidOutput_ShouldPass"),
-        new TestCaseData(Json, "resultsKey", "NAME,AGE,CITY,GENDER\nREDA,21,REDA,girl",
+        new TestCaseData(Json, "resultsKey", "NAME,AGE,CITY,GENDER\nAlice,21,Boston,girl",
                 new Dictionary<string, FieldConfiguration>
                 {
                     {
@@ -138,7 +138,7 @@ public class AssertionOutputContentByExpectedCsvResultsTests
                     }
                 }, false,"0% match","Invalid fields: AGE")
             .SetName("FieldOutOfErrorRange_ShouldFail"),
-        new TestCaseData(Json, "resultsKey", "NAME,AGE,CITY,GENDER\nREDA,21,REDA,girl",
+        new TestCaseData(Json, "resultsKey", "NAME,AGE,CITY,GENDER\nAlice,21,Boston,girl",
                 new Dictionary<string, FieldConfiguration>
                 {
                     {

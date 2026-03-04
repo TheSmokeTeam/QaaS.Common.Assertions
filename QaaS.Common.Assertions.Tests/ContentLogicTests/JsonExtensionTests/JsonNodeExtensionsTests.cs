@@ -12,13 +12,13 @@ public class JsonNodeExtensionsTests
 {
     private static readonly JsonObject Json = new()
     {
-        { "name", "REDA" },
+        { "name", "Alice" },
         { "age", "20" },
         { "gender", "female" },
         {
             "address", new JsonObject()
             {
-                { "city", "REDA" }
+                { "city", "Boston" }
             }
         }
     };
@@ -27,7 +27,7 @@ public class JsonNodeExtensionsTests
     {
         new TestCaseData("$.gender", "female")
             .SetName("ValidPath"),
-        new TestCaseData("$.address.city", "REDA")
+        new TestCaseData("$.address.city", "Boston")
             .SetName("ValidPath2"),
     };
 

@@ -16,7 +16,7 @@ public class CsvFieldsMappingValidationTests
         new TestCaseData(new List<Dictionary<string, object?>>
                 {
                     new()
-                        { { "NAME", "REDA" }, { "AGE", "21" }, { "GENDER", "girl" }, { "CITY", "REDA" } }
+                        { { "NAME", "Alice" }, { "AGE", "21" }, { "GENDER", "girl" }, { "CITY", "Boston" } }
                 },
                 new Dictionary<string, FieldConfiguration>
                 {
@@ -41,7 +41,7 @@ public class CsvFieldsMappingValidationTests
         new TestCaseData(new List<Dictionary<string, object?>>
             {
                 new()
-                    { { "NAME2", "REDA" }, { "AGE2", "21" }, { "GENDER", "girl" }, { "CITY", "REDA" } }
+                    { { "NAME2", "Alice" }, { "AGE2", "21" }, { "GENDER", "girl" }, { "CITY", "Boston" } }
             },
             new Dictionary<string, FieldConfiguration>
             {
@@ -68,7 +68,7 @@ public class CsvFieldsMappingValidationTests
             .SetName("ColumnsNamesInvalidInMapping"),
         new TestCaseData(new List<Dictionary<string, object?>>
                 {
-                    new() { { "", "REDA" } }
+                    new() { { "", "Unknown" } }
                 },
                 new Dictionary<string, FieldConfiguration>
                 {

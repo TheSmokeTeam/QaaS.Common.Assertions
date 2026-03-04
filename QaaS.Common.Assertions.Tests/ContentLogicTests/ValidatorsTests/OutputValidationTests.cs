@@ -17,16 +17,16 @@ public class OutputValidationTests
 {
     private static readonly JsonObject Json = new()
     {
-        { "name", "REDA" },
+        { "name", "Alice" },
         { "age", "20" },
         { "gender", "female" },
         {
             "address", new JsonObject()
             {
-                { "city", "REDA" }
+                { "city", "Boston" }
             }
         },
-        { "password", "REDA" }
+        { "password", "cGFzc3dvcmQ=" }
     };
 
     private static readonly Dictionary<string, FieldConfiguration> Mapping = new()
@@ -136,22 +136,22 @@ public class OutputValidationTests
         new TestCaseData(Json,
                 new Dictionary<string, object>
                 {
-                    { "NAME", "REDA" }, { "AGE", "21" }, { "GENDER", "girl" }, { "CITY", "REDA" },
-                    { "PASSWORD", "REDA" }
+                    { "NAME", "Alice" }, { "AGE", "21" }, { "GENDER", "girl" }, { "CITY", "Boston" },
+                    { "PASSWORD", "70617373776F7264" }
                 }, Mapping,
                 true, new List<string>())
             .SetName("ValidOutput"),
         new TestCaseData(Json,
                 new Dictionary<string, object>
                 {
-                    { "NAME", "REDA" }, { "AGE", "23" }, { "GENDER", "girl" }, { "CITY", "REDA" },
-                    { "PASSWORD", "REDA" }
+                    { "NAME", "Alice" }, { "AGE", "23" }, { "GENDER", "girl" }, { "CITY", "Boston" },
+                    { "PASSWORD", "DEADBEEF" }
                 }, Mapping,
                 false, new List<string> { "AGE", "PASSWORD" })
             .SetName("InvalidFieldInOutput"),
         new TestCaseData(Json,
                 new Dictionary<string, object>
-                    { { "name", "REDA" }, { "age", "21" }, { "gender", "girl" } }, ValidNoPathsMapping,
+                    { { "name", "Alice" }, { "age", "21" }, { "gender", "girl" } }, ValidNoPathsMapping,
                 true, new List<string>())
             .SetName("NoPathsProvidedInMapping_Valid")
     };
@@ -279,13 +279,13 @@ public class OutputValidationTests
     {
         new TestCaseData(Json,
                 new Dictionary<string, object>
-                    { { "name", "REDA" }, { "age", "21" }, { "gender", "girl" }, { "city", "girl" } },
+                    { { "name", "Alice" }, { "age", "21" }, { "gender", "girl" }, { "city", "Boston" } },
                 InvalidNoPathsMapping,
                 false, "Field not found for JSONPath given: $.city")
             .SetName("NoPathsProvidedInMapping"),
         new TestCaseData(Json,
                 new Dictionary<string, object>
-                    { { "name", "REDA" }, { "age", "21" }, { "gender", "girl" }, { "city", "girl" } },
+                    { { "name", "Alice" }, { "age", "21" }, { "gender", "girl" }, { "city", "Boston" } },
                 InvalidMapping,
                 false, "Field not found for JSONPath given: $.country")
             .SetName("PathProvidedInMappingButDontExistInJson")
