@@ -191,4 +191,96 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
         Assert.Throws<InvalidOperationException>(() =>
             assertion.Assert(sessionDataList, new ImmutableArray<DataSource>()));
     }
+
+    [Test]
+    public void
+        TestAssertSingleSession_CallAssertFunctionWithNoInputsAndNoOutputsAndNoMetricsValues_AssertionShouldPass()
+    {
+        var outputMetrics = new CommunicationData<object>()
+        {
+            Name = CollectorName,
+            Data = new List<DetailedData<object>>()
+        };
+        var sessionDataList = new List<SessionData>()
+        {
+            new()
+            {
+                Name = SessionName,
+                Outputs = [new CommunicationData<object> { Name = "output", Data = [] }, outputMetrics],
+                Inputs = [new CommunicationData<object> { Name = "input", Data = [] }]
+            }
+        }.ToImmutableList();
+        var assertion = new ValidateHermeticMetricsByInputOutputPercentage()
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new ValidateHermeticMetricsByInputOutputPercentageConfig()
+            {
+                InputMetricName = InputMetricName,
+                OutputMetricName = OutputMetricName,
+                InputNames = ["input"],
+                OutputNames = ["output"],
+                MetricOutputSourceName = CollectorName
+            }
+        };
+
+        var result = assertion.Assert(sessionDataList, ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+    }
+
+    [Test]
+    public void
+        TestAssertSingleSession_CallAssertFunctionWithNoInputsAndSomeOutputs_AssertionShouldFailWithoutThrowing()
+    {
+        var outputData = new List<DetailedData<object>>
+        {
+            new() { Body = 1, Timestamp = DateTime.UtcNow }
+        };
+        var outputMetricResult = new List<DetailedData<object>>
+        {
+            new()
+            {
+                Body = new JsonObject
+                {
+                    {
+                        Metric, new JsonObject
+                        {
+                            { NameProperty, OutputMetricName }
+                        }
+                    },
+                    { ValueProperty, "1" }
+                },
+                Timestamp = DateTime.UtcNow
+            }
+        };
+        var sessionDataList = new List<SessionData>()
+        {
+            new()
+            {
+                Name = SessionName,
+                Outputs =
+                [
+                    new CommunicationData<object> { Name = "output", Data = outputData },
+                    new CommunicationData<object> { Name = CollectorName, Data = outputMetricResult }
+                ],
+                Inputs = [new CommunicationData<object> { Name = "input", Data = [] }]
+            }
+        }.ToImmutableList();
+        var assertion = new ValidateHermeticMetricsByInputOutputPercentage()
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new ValidateHermeticMetricsByInputOutputPercentageConfig()
+            {
+                InputMetricName = InputMetricName,
+                OutputMetricName = OutputMetricName,
+                InputNames = ["input"],
+                OutputNames = ["output"],
+                MetricOutputSourceName = CollectorName
+            }
+        };
+
+        var result = assertion.Assert(sessionDataList, ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.False);
+    }
 }

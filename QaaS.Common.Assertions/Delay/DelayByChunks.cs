@@ -80,6 +80,20 @@ public class DelayByChunks: BaseAssertion<DelayByChunksConfiguration>
             Configuration.Output!.ChunkTimeOption);
         var chunkOutputTimesListLength = chunkOutputTimesList.Count;
 
+        if (chunkInputTimesListLength == 0)
+        {
+            _traceStringBuilder.Append(
+                "\nNo complete input chunks were found, no delay comparison can be performed.\n");
+            return 0;
+        }
+
+        if (chunkOutputTimesListLength == 0)
+        {
+            _traceStringBuilder.Append(
+                "\nNo complete output chunks were found, no chunks arrived on time.\n");
+            return 0;
+        }
+
         // Add to trace the average delay of chunks
         BigInteger averageInputChunksTime = 0;
         chunkInputTimesList.ForEach(input => averageInputChunksTime += input.Ticks / TimeSpan.TicksPerMillisecond);

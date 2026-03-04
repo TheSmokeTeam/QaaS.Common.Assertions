@@ -130,4 +130,79 @@ public class HermeticByExpectedOutputCountTests
         // Assert
         Assert.IsFalse(result);
     }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithMissingConfiguredOutputName_ShouldCountAsZero()
+    {
+        var session = new SessionData
+        {
+            Name = "Id1",
+            Outputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = "existing",
+                    Data = new List<DetailedData<object>> { new() }
+                }
+            }
+        };
+        var assertion = new HermeticByExpectedOutputCount
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new HermeticByExpectedOutputCountConfiguration
+            {
+                OutputNames = new[] { "existing", "missing" },
+                ExpectedCount = 1
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+    }
+
+    [Test]
+    public void TestAssertMultipleSessions_CallAssertFunctionAcrossSessions_ShouldAggregateCounts()
+    {
+        var sessions = new List<SessionData>
+        {
+            new()
+            {
+                Name = "Id1",
+                Outputs = new List<CommunicationData<object>>
+                {
+                    new()
+                    {
+                        Name = "existing",
+                        Data = new List<DetailedData<object>> { new(), new() }
+                    }
+                }
+            },
+            new()
+            {
+                Name = "Id2",
+                Outputs = new List<CommunicationData<object>>
+                {
+                    new()
+                    {
+                        Name = "existing",
+                        Data = new List<DetailedData<object>> { new() }
+                    }
+                }
+            }
+        }.ToImmutableList();
+        var assertion = new HermeticByExpectedOutputCount
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new HermeticByExpectedOutputCountConfiguration
+            {
+                OutputNames = new[] { "existing" },
+                ExpectedCount = 3
+            }
+        };
+
+        var result = assertion.Assert(sessions, ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+    }
 }

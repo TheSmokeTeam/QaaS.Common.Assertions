@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.ContentLogic;
 using QaaS.Common.Assertions.ContentLogic;
 using QaaS.Common.Assertions.Tests.ContentLogicTests.ContentLogicTestsUtils;

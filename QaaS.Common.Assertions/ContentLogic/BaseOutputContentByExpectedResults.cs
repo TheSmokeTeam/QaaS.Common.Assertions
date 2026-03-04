@@ -16,7 +16,7 @@ namespace QaaS.Common.Assertions.ContentLogic;
 public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertion<TConfig>
     where TConfig : OutputContentByExpectedResultsConfiguration, new()
 {
-    private IList<Dictionary<string, object?>> _expectedResults { get; set; }
+    private IList<Dictionary<string, object?>> _expectedResults { get; set; } = new List<Dictionary<string, object?>>();
 
     /// <summary>
     /// Gets an instance of IResultsHandler

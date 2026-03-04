@@ -21,7 +21,7 @@ public class
         var outputCount = Configuration.OutputNames!.Sum(output => sessionDataList.Sum(sessionData =>
             sessionData.TryGetOutputByName(output, out var data) ? data!.Data.Count : 0));
 
-        var outputInputResultPercentage = (double)outputCount * 100 / inputCount;
+        var outputInputResultPercentage = CalculatePercentage(outputCount, inputCount);
         AssertionMessage =
             $"Sum of outputs {string.Join(", ", Configuration.OutputNames!)} count is {outputCount}\n" +
             $"Sum of the inputs {string.Join(", ", Configuration.InputNames!)} count is {inputCount}\n" +
@@ -44,7 +44,11 @@ public class
             : 0;
 
         AssertionMessage += $"\nHermetics result based on metrics formula: {metricsHermeticsResultPercentage:F4}%\n";
-
+        if (double.IsPositiveInfinity(metricsHermeticsResultPercentage) &&
+            double.IsPositiveInfinity(outputInputResultPercentage))
+            return true;
+        if (double.IsInfinity(metricsHermeticsResultPercentage) || double.IsInfinity(outputInputResultPercentage))
+            return false;
         return Math.Abs(metricsHermeticsResultPercentage - outputInputResultPercentage) < Configuration.Tolerance;
     }
 
@@ -71,5 +75,12 @@ public class
                                           throw new InvalidOperationException(
                                               $"Metrics result invalid, can't extract metric value for metric {metricName} in output {Configuration.MetricOutputSourceName}"));
         return metricValue;
+    }
+
+    private static double CalculatePercentage(int numerator, int denominator)
+    {
+        if (denominator == 0)
+            return numerator == 0 ? 0 : double.PositiveInfinity;
+        return (double)numerator * 100 / denominator;
     }
 }

@@ -24,8 +24,10 @@ public class HermeticByInputOutputPercentage: BaseAssertion<HermeticByInputOutpu
                     sessionData.TryGetInputByName(input, out var data) ? data!.Data.Count : 0));
         var outputCount = Configuration.OutputNames!.Sum(output => sessionDataList.Sum(sessionData =>
             sessionData.TryGetOutputByName(output, out var data) ? data!.Data.Count : 0));
-        
-        var actualPercentage = (double)outputCount * 100 / inputCount;
+
+        var actualPercentage = inputCount == 0
+            ? outputCount == 0 ? 0 : double.PositiveInfinity
+            : (double)outputCount * 100 / inputCount;
         AssertionMessage = $"Sum of outputs {string.Join(", ", Configuration.OutputNames!)} count is {outputCount}, " +
                            $"The sum of the inputs { string.Join(", ", Configuration.InputNames!)} count is {inputCount}, " +
                            $"The percentage between the total output count and total input count is {actualPercentage}";

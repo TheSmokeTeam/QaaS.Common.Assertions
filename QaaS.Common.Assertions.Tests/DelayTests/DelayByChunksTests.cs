@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.Delay;
 using QaaS.Common.Assertions.Delay;
 using QaaS.Common.Assertions.Delay.Exceptions;
@@ -379,6 +380,65 @@ public class DelayByChunksTests
         if (outputChunkSize > 0 && outputListSize > 0)
             StringAssert.Contains($"Expected {inputList.Count / inputChunkSize} output chunks" +
                               $" to arrive in under {maximumDelayMilliSeconds} milliseconds", 
-            assertion.AssertionMessage);
+            assertion.AssertionMessage!);
+    }
+
+    [Test]
+    public void TestGetListOfChunkTimes_CallFunctionWithInvalidChunkSize_ShouldThrowArgumentException()
+    {
+        var list = new List<DetailedData<byte[]>>
+        {
+            new() { Body = Array.Empty<byte>(), Timestamp = DateTime.UtcNow }
+        };
+
+        var exception = Assert.Throws<TargetInvocationException>(() =>
+            GetListOfChunkTimesMethod!.Invoke(null, new object?[] { list, 0, ChunkTimeOption.First }));
+
+        Assert.That(exception!.InnerException, Is.TypeOf<ArgumentException>());
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallFunctionWhenOutputHasNoCompleteChunks_ShouldReturnFalse()
+    {
+        const string name = "test";
+        var input = new CommunicationData<object>
+        {
+            Name = name,
+            Data = new List<DetailedData<object>>
+            {
+                new() { Body = null, Timestamp = new DateTime(1) },
+                new() { Body = null, Timestamp = new DateTime(2) }
+            }
+        };
+        var output = new CommunicationData<object>
+        {
+            Name = name,
+            Data = new List<DetailedData<object>>
+            {
+                new() { Body = null, Timestamp = new DateTime(3) }
+            }
+        };
+        var session = new SessionData
+        {
+            Name = "Id",
+            Inputs = new List<CommunicationData<object>> { input },
+            Outputs = new List<CommunicationData<object>> { output }
+        };
+        var assertion = new DelayByChunks
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new DelayByChunksConfiguration
+            {
+                Input = new Chunk { Name = name, ChunkSize = 2, ChunkTimeOption = ChunkTimeOption.First },
+                Output = new Chunk { Name = name, ChunkSize = 2, ChunkTimeOption = ChunkTimeOption.First },
+                MaximumDelayMs = 1000,
+                MaximumNegativeDelayBufferMs = 100
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.False);
+        StringAssert.Contains("Expected 1 output chunks", assertion.AssertionMessage!);
     }
 }

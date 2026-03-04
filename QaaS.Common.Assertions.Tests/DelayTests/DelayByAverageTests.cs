@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.Delay;
 using QaaS.Common.Assertions.Delay;
 using QaaS.Common.Assertions.Delay.Exceptions;
@@ -82,7 +83,7 @@ public class DelayByAverageTests
         Assert.That(testResult == shouldArriveInTime);
         if (outputListSize > 0)
             StringAssert.Contains($"maximum allowed average delay is {maximumDelayMilliSeconds} milliseconds",
-                assertion.AssertionMessage);
+                assertion.AssertionMessage!);
     }
     
     [Test]
@@ -266,5 +267,139 @@ public class DelayByAverageTests
         
         // Assert
         Assert.That(result);
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallFunctionWithNoOutputs_ShouldReturnTrueWithNoDelayMessage()
+    {
+        const string name = "Test";
+        var session = new SessionData
+        {
+            Name = "Id",
+            Inputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = name,
+                    Data = new List<DetailedData<object>>
+                    {
+                        new() { Body = null, Timestamp = new DateTime(1) }
+                    }
+                }
+            },
+            Outputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = name,
+                    Data = new List<DetailedData<object>>()
+                }
+            }
+        };
+        var assertion = new DelayByAverage
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new DelayByAverageConfiguration
+            {
+                InputName = name,
+                OutputName = name,
+                MaximumDelayMs = 1000
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+        StringAssert.Contains("No outputs found", assertion.AssertionMessage!);
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallFunctionWithInputWithoutTimestamp_ShouldThrowNotSupportedException()
+    {
+        const string name = "Test";
+        var session = new SessionData
+        {
+            Name = "Id",
+            Inputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = name,
+                    Data = new List<DetailedData<object>>
+                    {
+                        new() { Body = null, Timestamp = null }
+                    }
+                }
+            },
+            Outputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = name,
+                    Data = new List<DetailedData<object>>
+                    {
+                        new() { Body = null, Timestamp = new DateTime(1) }
+                    }
+                }
+            }
+        };
+        var assertion = new DelayByAverage
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new DelayByAverageConfiguration
+            {
+                InputName = name,
+                OutputName = name,
+                MaximumDelayMs = 1000
+            }
+        };
+
+        Assert.Throws<NotSupportedException>(() =>
+            assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty));
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallFunctionWithOutputWithoutTimestamp_ShouldThrowNotSupportedException()
+    {
+        const string name = "Test";
+        var session = new SessionData
+        {
+            Name = "Id",
+            Inputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = name,
+                    Data = new List<DetailedData<object>>
+                    {
+                        new() { Body = null, Timestamp = new DateTime(1) }
+                    }
+                }
+            },
+            Outputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = name,
+                    Data = new List<DetailedData<object>>
+                    {
+                        new() { Body = null, Timestamp = null }
+                    }
+                }
+            }
+        };
+        var assertion = new DelayByAverage
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new DelayByAverageConfiguration
+            {
+                InputName = name,
+                OutputName = name,
+                MaximumDelayMs = 1000
+            }
+        };
+
+        Assert.Throws<NotSupportedException>(() =>
+            assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty));
     }
 }

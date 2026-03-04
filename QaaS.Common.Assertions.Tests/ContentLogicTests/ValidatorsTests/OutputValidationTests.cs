@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.ContentLogic;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.ContentLogic.FieldsValidationConfig;
 using QaaS.Common.Assertions.ContentLogic;

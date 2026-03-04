@@ -21,7 +21,9 @@ public class HermeticByInputOutputPercentageInRange : BaseAssertion<HermeticByIn
         var outputCount = Configuration.OutputNames!.Sum(output => sessionDataList.Sum(sessionData =>
             sessionData.TryGetOutputByName(output, out var data) ? data!.Data.Count : 0));
 
-        var actualPercentage = (double)outputCount * 100 / inputCount;
+        var actualPercentage = inputCount == 0
+            ? outputCount == 0 ? 0 : double.PositiveInfinity
+            : (double)outputCount * 100 / inputCount;
         AssertionMessage =
             $"The sum of the count of the outputs {string.Join(", ", Configuration.OutputNames!)} is {outputCount}, " +
             $"The sum of the count of the inputs {string.Join(", ", Configuration.InputNames!)} is {inputCount}. " +

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text.Json.Nodes;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.ContentLogic;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.ContentLogic.FieldsValidationConfig;
 using QaaS.Common.Assertions.ContentLogic;
@@ -264,5 +265,68 @@ public class AssertionOutputContentByExpectedCsvResultsTests
         Console.WriteLine(ex);
         if (ex != null)
             Assert.That(ex.Message.Contains(expectedExceptionMessage));
+    }
+
+    [Test]
+    public void TestAssertionResultsAsCsv_WhenExpectedAndActualCountsDoNotMatch_ShouldReturnFalse()
+    {
+        var sessionDataList = QaaSSdkObjectsUtils.BuildSessionList(new List<JsonNode?> { Json }, OutputName).ToImmutableList();
+        var externalDataList = QaaSSdkObjectsUtils.BuildDataSourceList("resultsKey",
+            "NAME,AGE,CITY,GENDER\nAlice,21,Boston,girl\nAlice,21,Boston,girl").ToImmutableList();
+        var assertion = new OutputContentByExpectedCsvResults
+        {
+            Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
+            {
+                OutputName = OutputName,
+                ResultsMetaDataStorageKey = "resultsKey",
+                ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>
+                {
+                    {
+                        "NAME", new FieldConfiguration
+                        {
+                            Path = "$.name",
+                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = assertion.Assert(sessionDataList, externalDataList);
+
+        Assert.That(result, Is.False);
+        StringAssert.Contains("did not match", assertion.AssertionMessage!);
+    }
+
+    [Test]
+    public void TestAssertionResultsAsCsv_WhenOutputItemIsNull_ShouldCountAsEmptyItemAndFail()
+    {
+        var sessionDataList = QaaSSdkObjectsUtils.BuildSessionList(new List<JsonNode?> { null }, OutputName).ToImmutableList();
+        var externalDataList = QaaSSdkObjectsUtils.BuildDataSourceList("resultsKey",
+            "NAME\nAlice").ToImmutableList();
+        var assertion = new OutputContentByExpectedCsvResults
+        {
+            Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
+            {
+                OutputName = OutputName,
+                ResultsMetaDataStorageKey = "resultsKey",
+                ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>
+                {
+                    {
+                        "NAME", new FieldConfiguration
+                        {
+                            Path = "$.name",
+                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = assertion.Assert(sessionDataList, externalDataList);
+
+        Assert.That(result, Is.False);
+        StringAssert.Contains("1 empty items", assertion.AssertionMessage!);
+        StringAssert.Contains("is empty", assertion.AssertionTrace!);
     }
 }

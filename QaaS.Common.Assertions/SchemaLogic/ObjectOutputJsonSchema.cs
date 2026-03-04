@@ -58,6 +58,9 @@ public class ObjectOutputJsonSchema : BaseAssertion<ObjectOutputJsonSchemaConfig
                 throw new ArgumentException("One of the given output items could not be deserialized to json",
                     innerException: e);
             }
+
+            var deserializedOutputElement =
+                JsonSerializer.Deserialize<JsonElement>(deserializedOutput?.ToJsonString() ?? "null");
           
             
             // Check if json item is valid according to at least one of the given schemas
@@ -65,7 +68,7 @@ public class ObjectOutputJsonSchema : BaseAssertion<ObjectOutputJsonSchemaConfig
             var validationResults = new List<KeyValuePair<string, string>>();
             foreach (var jsonSchema in jsonSchemas)
             {
-                var evaluationResults = jsonSchema.Value.Evaluate(deserializedOutput, new EvaluationOptions
+                var evaluationResults = jsonSchema.Value.Evaluate(deserializedOutputElement, new EvaluationOptions
                 {
                     OutputFormat = OutputFormat.List // Needs to be list so we dont have to recursively go over all sub fields in order to get all errors
                 });
@@ -77,7 +80,7 @@ public class ObjectOutputJsonSchema : BaseAssertion<ObjectOutputJsonSchemaConfig
 
                 var evaluationStringMessages = new List<string>();
                 AddEvaluationResultsToEvaluationStringMessagesAsString(evaluationResults, ref evaluationStringMessages);
-                foreach (var nodeEvaluationResult in evaluationResults.Details)
+                foreach (var nodeEvaluationResult in evaluationResults.Details ?? [])
                 {
                     if (!nodeEvaluationResult.IsValid)
                         AddEvaluationResultsToEvaluationStringMessagesAsString(nodeEvaluationResult, ref evaluationStringMessages);
@@ -110,15 +113,16 @@ public class ObjectOutputJsonSchema : BaseAssertion<ObjectOutputJsonSchemaConfig
     /// </summary>
     private static JsonNode? DeserializeOutputToJson(object? body)
     {
-        if(body?.GetType() != typeof(string))
-            body = JsonSerializer.Serialize(body);
-        return JsonNode.Parse(body as string);
+        var bodyAsJsonString = body is string bodyString
+            ? bodyString
+            : JsonSerializer.Serialize(body);
+        return JsonNode.Parse(bodyAsJsonString);
     }
 
     private static void AddEvaluationResultsToEvaluationStringMessagesAsString(EvaluationResults evaluationResults,
         ref List<string> evaluationStringMessages)
     {
-        if (!evaluationResults.HasErrors || evaluationResults.Errors is null)
+        if (evaluationResults.Errors is null || evaluationResults.Errors.Count == 0)
             return;
         var errorsString = string.Join(" | " ,evaluationResults.Errors.Select(pair =>
                 $"Error Type: {pair.Key}, Error Message: {pair.Value}"));

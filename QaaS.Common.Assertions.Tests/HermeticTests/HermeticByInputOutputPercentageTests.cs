@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.Hermetic;
 using QaaS.Common.Assertions.Hermetic;
 using QaaS.Framework.SDK.ContextObjects;
@@ -167,5 +168,88 @@ public class HermeticByInputOutputPercentageTests
 
         // Assert
         Assert.IsFalse(result);
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithInputsAreOutputs_ShouldUseOutputsAsInputSource()
+    {
+        var session = new SessionData
+        {
+            Name = "Id1",
+            Outputs = new List<CommunicationData<object>>
+            {
+                new() { Name = "inputAsOutput", Data = new List<DetailedData<object>> { new(), new(), new(), new() } },
+                new() { Name = "result", Data = new List<DetailedData<object>> { new(), new() } }
+            }
+        };
+        var assertion = new HermeticByInputOutputPercentage
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new HermeticByInputOutputPercentageConfiguration
+            {
+                InputNames = new[] { "inputAsOutput" },
+                OutputNames = new[] { "result" },
+                InputsAreOutputs = true,
+                ExpectedPercentage = 50
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithNoInputsAndNoOutputs_ShouldReturnTrueWithoutDivisionError()
+    {
+        var session = new SessionData
+        {
+            Name = "Id1",
+            Inputs = new List<CommunicationData<object>>(),
+            Outputs = new List<CommunicationData<object>>()
+        };
+        var assertion = new HermeticByInputOutputPercentage
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new HermeticByInputOutputPercentageConfiguration
+            {
+                InputNames = new[] { "missing-input" },
+                OutputNames = new[] { "missing-output" },
+                ExpectedPercentage = 400
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+        StringAssert.Contains("percentage between the total output count and total input count is 0", assertion.AssertionMessage!);
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithNoInputsButWithOutputs_ShouldReturnFalseWithoutDivisionError()
+    {
+        var session = new SessionData
+        {
+            Name = "Id1",
+            Inputs = new List<CommunicationData<object>>(),
+            Outputs = new List<CommunicationData<object>>
+            {
+                new() { Name = "out", Data = new List<DetailedData<object>> { new() } }
+            }
+        };
+        var assertion = new HermeticByInputOutputPercentage
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new HermeticByInputOutputPercentageConfiguration
+            {
+                InputNames = new[] { "missing-input" },
+                OutputNames = new[] { "out" },
+                ExpectedPercentage = 100
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.False);
     }
 }

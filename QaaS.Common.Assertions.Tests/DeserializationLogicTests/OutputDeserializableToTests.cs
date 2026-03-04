@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using Moq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.DeserializationLogic;
 using QaaS.Common.Assertions.Tests.Mocks;
 using QaaS.Framework.SDK.ContextObjects;
@@ -73,5 +74,82 @@ public class OutputDeserializableToTests
 
         // Assert
         Assert.AreEqual(shouldPassAssertion, result);
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithValidJsonBytes_ShouldReturnTrue()
+    {
+        const string outputName = "test";
+        var session = new SessionData
+        {
+            Name = "Id1",
+            Outputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = outputName,
+                    Data = new List<DetailedData<object>>
+                    {
+                        new() { Body = System.Text.Encoding.UTF8.GetBytes("{\"id\":1}") }
+                    }
+                }
+            }
+        };
+        var assertion = new QaaS.Common.Assertions.DeserializationLogic.OutputDeserializableTo
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new OutputDeserializableToConfiguration
+            {
+                OutputName = outputName,
+                Deserialize = new DeserializeConfig
+                {
+                    Deserializer = SerializationType.Json
+                }
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithMixedValidAndInvalidJsonBytes_ShouldReturnFalse()
+    {
+        const string outputName = "test";
+        var session = new SessionData
+        {
+            Name = "Id1",
+            Outputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = outputName,
+                    Data = new List<DetailedData<object>>
+                    {
+                        new() { Body = System.Text.Encoding.UTF8.GetBytes("{\"id\":1}") },
+                        new() { Body = System.Text.Encoding.UTF8.GetBytes("not-json") }
+                    }
+                }
+            }
+        };
+        var assertion = new QaaS.Common.Assertions.DeserializationLogic.OutputDeserializableTo
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new OutputDeserializableToConfiguration
+            {
+                OutputName = outputName,
+                Deserialize = new DeserializeConfig
+                {
+                    Deserializer = SerializationType.Json
+                }
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.False);
+        StringAssert.Contains("could not be deserialized", assertion.AssertionMessage!);
+        StringAssert.Contains("index 1", assertion.AssertionTrace!);
     }
 }

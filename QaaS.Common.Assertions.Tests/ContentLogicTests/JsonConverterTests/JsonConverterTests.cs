@@ -26,17 +26,17 @@ public class JsonConverterTests
 
     private record YamlObject
     {
-        public string name { get; set; }
+        public string name { get; set; } = string.Empty;
 
-        public string age { get; set; }
-        public string gender { get; set; }
+        public string age { get; set; } = string.Empty;
+        public string gender { get; set; } = string.Empty;
 
-        public Address address { get; set; }
+        public Address address { get; set; } = new();
     }
 
     private record Address
     {
-        public string city { get; set; }
+        public string city { get; set; } = string.Empty;
     }
 
     private static IEnumerable<TestCaseData> _convertableObjectsAndConverters = new[]

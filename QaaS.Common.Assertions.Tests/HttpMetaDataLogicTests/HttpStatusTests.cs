@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.HttpMetaDataLogic;
 using QaaS.Common.Assertions.HttpMetaDataLogic;
 using QaaS.Framework.SDK.ContextObjects;
@@ -130,8 +131,8 @@ public class HttpStatusTests
         
         // Assert
         Assert.IsFalse(result);
-        StringAssert.Contains((numberOfOutputs*numberOfOutputSources).ToString(), assertion.AssertionMessage);
-        StringAssert.Contains(incorrectStatusCode.ToString(), assertion.AssertionTrace);
+        StringAssert.Contains((numberOfOutputs*numberOfOutputSources).ToString(), assertion.AssertionMessage!);
+        StringAssert.Contains(incorrectStatusCode.ToString(), assertion.AssertionTrace!);
     }
     
     [Test,
@@ -185,5 +186,73 @@ public class HttpStatusTests
         // Act + Assert
         Assert.Throws<ArgumentException>(() =>
             assertion.Assert(sessionList, new ImmutableArray<DataSource>()));
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithMixedNoStatusAndIncorrectStatus_ShouldThrowForMissingStatus()
+    {
+        var outputName = "output";
+        var session = new SessionData
+        {
+            Name = "Id1",
+            Outputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = outputName,
+                    Data = new List<DetailedData<object>>
+                    {
+                        new() { MetaData = new MetaData { Http = new Http { StatusCode = 500 } } },
+                        new()
+                    }
+                }
+            }
+        };
+        var assertion = new HttpStatus
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new HttpStatusConfiguration
+            {
+                OutputNames = new[] { outputName },
+                StatusCode = 200
+            }
+        };
+
+        var exception = Assert.Throws<ArgumentException>(() =>
+            assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty));
+
+        StringAssert.Contains("have no Http Status", exception!.Message);
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithNoItems_ShouldReturnTrue()
+    {
+        var outputName = "output";
+        var session = new SessionData
+        {
+            Name = "Id1",
+            Outputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = outputName,
+                    Data = new List<DetailedData<object>>()
+                }
+            }
+        };
+        var assertion = new HttpStatus
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new HttpStatusConfiguration
+            {
+                OutputNames = new[] { outputName },
+                StatusCode = 200
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+        StringAssert.Contains("arrived with status 200", assertion.AssertionMessage!);
     }
 }

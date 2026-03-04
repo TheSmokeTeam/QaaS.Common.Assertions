@@ -130,4 +130,73 @@ public class HermeticByExpectedOutputCountInRangeTests
         // Assert
         Assert.IsFalse(result);
     }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithCountOnRangeBoundary_ShouldReturnTrue()
+    {
+        var session = new SessionData
+        {
+            Name = "Id1",
+            Outputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = "out",
+                    Data = new List<DetailedData<object>> { new(), new(), new() }
+                }
+            }
+        };
+        var assertion = new HermeticByExpectedOutputCountInRange
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new HermeticByExpectedOutputCountInRangeConfiguration
+            {
+                OutputNames = new[] { "out" },
+                ExpectedMinimumCount = 3,
+                ExpectedMaximumCount = 3
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+    }
+
+    [Test]
+    public void TestAssertMultipleSessions_CallAssertFunctionWhenTotalOutsideRange_ShouldReturnFalse()
+    {
+        var sessions = new List<SessionData>
+        {
+            new()
+            {
+                Name = "Id1",
+                Outputs = new List<CommunicationData<object>>
+                {
+                    new() { Name = "out", Data = new List<DetailedData<object>> { new(), new() } }
+                }
+            },
+            new()
+            {
+                Name = "Id2",
+                Outputs = new List<CommunicationData<object>>
+                {
+                    new() { Name = "out", Data = new List<DetailedData<object>> { new(), new(), new() } }
+                }
+            }
+        }.ToImmutableList();
+        var assertion = new HermeticByExpectedOutputCountInRange
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new HermeticByExpectedOutputCountInRangeConfiguration
+            {
+                OutputNames = new[] { "out" },
+                ExpectedMinimumCount = 1,
+                ExpectedMaximumCount = 4
+            }
+        };
+
+        var result = assertion.Assert(sessions, ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.False);
+    }
 }

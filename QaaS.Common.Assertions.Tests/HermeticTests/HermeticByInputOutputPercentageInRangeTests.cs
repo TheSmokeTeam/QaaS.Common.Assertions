@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.Hermetic;
 using QaaS.Common.Assertions.Hermetic;
 using QaaS.Framework.SDK.ContextObjects;
@@ -166,6 +167,92 @@ public class HermeticByInputOutputPercentageInRangeTests
 
         // Assert
         Assert.IsFalse(result);
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithInputsAreOutputs_ShouldUseOutputInputCounts()
+    {
+        var session = new SessionData
+        {
+            Name = "Id1",
+            Outputs = new List<CommunicationData<object>>
+            {
+                new() { Name = "inAsOut", Data = new List<DetailedData<object>> { new(), new(), new(), new() } },
+                new() { Name = "out", Data = new List<DetailedData<object>> { new(), new() } }
+            }
+        };
+        var assertion = new HermeticByInputOutputPercentageInRange
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new HermeticByInputOutputPercentageInRangeConfiguration
+            {
+                InputNames = new[] { "inAsOut" },
+                OutputNames = new[] { "out" },
+                InputsAreOutputs = true,
+                ExpectedMinimumPercentage = 49,
+                ExpectedMaximumPercentage = 51
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithNoInputsAndNoOutputs_ShouldUseZeroPercentage()
+    {
+        var session = new SessionData
+        {
+            Name = "Id1",
+            Inputs = new List<CommunicationData<object>>(),
+            Outputs = new List<CommunicationData<object>>()
+        };
+        var assertion = new HermeticByInputOutputPercentageInRange
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new HermeticByInputOutputPercentageInRangeConfiguration
+            {
+                InputNames = new[] { "missing-input" },
+                OutputNames = new[] { "missing-output" },
+                ExpectedMinimumPercentage = 0,
+                ExpectedMaximumPercentage = 0
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+        StringAssert.Contains("percentage between the total output count and total input count is 0", assertion.AssertionMessage!);
+    }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithNoInputsButWithOutputs_ShouldFailInsteadOfThrowing()
+    {
+        var session = new SessionData
+        {
+            Name = "Id1",
+            Inputs = new List<CommunicationData<object>>(),
+            Outputs = new List<CommunicationData<object>>
+            {
+                new() { Name = "out", Data = new List<DetailedData<object>> { new() } }
+            }
+        };
+        var assertion = new HermeticByInputOutputPercentageInRange
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new HermeticByInputOutputPercentageInRangeConfiguration
+            {
+                InputNames = new[] { "missing-input" },
+                OutputNames = new[] { "out" },
+                ExpectedMinimumPercentage = 0,
+                ExpectedMaximumPercentage = 100
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.False);
     }
 
 }

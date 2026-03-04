@@ -199,17 +199,17 @@ public class JsonOutputSchemaTests
 
     private static IEnumerable<TestCaseData> _testSingleSessionAssertionFailureDueToOutputCaseSource = new[]
     {
-        new TestCaseData(new List<object>{null}).SetName("OneNullOutput"),
-        new TestCaseData(new List<object>{null, null, null}).SetName("MultipleNullOutputs"),
-        new TestCaseData(new List<object>{"not-json"}).SetName("SingleInvalidOutput"),
-        new TestCaseData(new List<object>{"not-json", "not-json", "not-json"})
+        new TestCaseData(new List<object?>{null}).SetName("OneNullOutput"),
+        new TestCaseData(new List<object?>{null, null, null}).SetName("MultipleNullOutputs"),
+        new TestCaseData(new List<object?>{"not-json"}).SetName("SingleInvalidOutput"),
+        new TestCaseData(new List<object?>{"not-json", "not-json", "not-json"})
             .SetName("MultipleInvalidOutputs"),
     };
     
     [Test, TestCaseSource(nameof(_testSingleSessionAssertionFailureDueToOutputCaseSource))]
     public void
         TestSingleSessionAssertionFailureDueToOutput_CallFunctionWithOutputContainingAnItemThatCannotBeConvertedToAJson_ShouldThrowAnException
-        (List<object> invalidOutputBodies)
+        (List<object?> invalidOutputBodies)
     {
         // Arrange
         var configurations = new ObjectOutputJsonSchemaConfiguration
@@ -253,5 +253,51 @@ public class JsonOutputSchemaTests
             }
         });
         Globals.Logger.LogInformation("Encountered exception is {exception}", exception);
+    }
+
+    [Test]
+    public void TestSingleSessionAssert_CallFunctionWithNullJsonAndNullSchema_ShouldPass()
+    {
+        const string outputName = "test";
+        const string nullSchema = @"{""type"":""null""}";
+        var sessionList = new List<SessionData>
+        {
+            new()
+            {
+                Outputs = new List<CommunicationData<object>>
+                {
+                    new()
+                    {
+                        Name = outputName,
+                        Data = new List<DetailedData<object>>
+                        {
+                            new() { Body = "null" }
+                        }
+                    }
+                }
+            }
+        }.ToImmutableList();
+        var assertion = new ObjectOutputJsonSchema
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new ObjectOutputJsonSchemaConfiguration
+            {
+                OutputName = outputName
+            }
+        };
+
+        var result = assertion.Assert(sessionList, new List<DataSource>
+        {
+            new()
+            {
+                Name = "schema",
+                Generator = new MockGenerator(new List<Data<object>>
+                {
+                    new() { Body = Encoding.UTF8.GetBytes(nullSchema) }
+                })
+            }
+        }.ToImmutableList());
+
+        Assert.That(result, Is.True);
     }
 }

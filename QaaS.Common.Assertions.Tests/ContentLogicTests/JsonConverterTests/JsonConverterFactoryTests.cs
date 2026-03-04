@@ -32,4 +32,11 @@ public class JsonConverterFactoryTests
         // Assert
         Assert.That(converter.GetType(), Is.EqualTo(expectedConverterType));
     }
+
+    [Test]
+    public void TestBuildJsonConverter_WhenTypeIsUnsupported_ThrowsNotSupportedException()
+    {
+        Assert.Throws<NotSupportedException>(() =>
+            Factory.BuildJsonConverter((JsonConverterType)1000));
+    }
 }
