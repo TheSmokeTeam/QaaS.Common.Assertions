@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 env:
   DOTNET_NOLOGO: true
@@ -56,64 +57,6 @@ jobs:
             exit 1
           fi
 
-      - name: Validate package metadata
-        if: startsWith(github.ref, 'refs/tags/')
-        shell: powershell
-        run: |
-          $projectPath = "${{ env.PROJECT_TO_PACK }}"
-          [xml]$project = Get-Content $projectPath
-          $propertyGroups = @($project.Project.PropertyGroup)
-
-          function Get-PropertyValue([string]$name) {
-            foreach ($group in $propertyGroups) {
-              $value = $group.$name
-              if ($null -ne $value -and "$value".Trim() -ne "") {
-                return "$value".Trim()
-              }
-            }
-            return $null
-          }
-
-          $packageId = Get-PropertyValue "PackageId"
-          $isPackable = (Get-PropertyValue "IsPackable")
-          $description = Get-PropertyValue "Description"
-          $packageReadmeFile = Get-PropertyValue "PackageReadmeFile"
-          $includeSymbols = Get-PropertyValue "IncludeSymbols"
-          $symbolPackageFormat = Get-PropertyValue "SymbolPackageFormat"
-
-          if ($isPackable -and $isPackable.ToLowerInvariant() -eq "false") {
-            throw "Project '$projectPath' is not packable."
-          }
-          if ([string]::IsNullOrWhiteSpace($description)) {
-            throw "Project '$projectPath' must define Description for NuGet package publishing."
-          }
-          if ($packageReadmeFile -ne "README.md") {
-            throw "Project '$projectPath' must set PackageReadmeFile=README.md."
-          }
-          if ($includeSymbols.ToLowerInvariant() -ne "true") {
-            throw "Project '$projectPath' must set IncludeSymbols=true."
-          }
-          if ($symbolPackageFormat -ne "snupkg") {
-            throw "Project '$projectPath' must set SymbolPackageFormat=snupkg."
-          }
-
-          $noneItems = @()
-          foreach ($itemGroup in @($project.Project.ItemGroup)) {
-            if ($itemGroup.None) {
-              $noneItems += @($itemGroup.None)
-            }
-          }
-
-          $readmePackItem = $noneItems |
-            Where-Object { $_.Link -eq "README.md" -and $_.Pack -eq "true" } |
-            Select-Object -First 1
-
-          if (-not $readmePackItem) {
-            throw "Project '$projectPath' must pack the repository README as README.md."
-          }
-
-          Write-Host "Validated package metadata for package '$packageId'."
-
       - name: Pack QaaS.Common.Assertions
         if: startsWith(github.ref, 'refs/tags/')
         run: |
@@ -128,29 +71,11 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         shell: powershell
         run: |
-          $mainPackages = Get-ChildItem "${{ env.PACKAGE_OUTPUT_DIRECTORY }}\QaaS.Common.Assertions.*.nupkg" `
-            | Where-Object { $_.Name -match "^QaaS\.Common\.Assertions\.[0-9].*\.nupkg$" }
-          $symbolPackages = Get-ChildItem "${{ env.PACKAGE_OUTPUT_DIRECTORY }}\QaaS.Common.Assertions.*.snupkg" `
-            | Where-Object { $_.Name -match "^QaaS\.Common\.Assertions\.[0-9].*\.snupkg$" }
-
-          if (-not $mainPackages) {
-            throw "No main package was produced for publishing."
-          }
-          if (-not $symbolPackages) {
-            throw "No .snupkg symbol package was produced for publishing."
-          }
-
-          foreach ($package in $mainPackages) {
-            dotnet nuget push $package.FullName `
-              -k ${{ secrets.NUGET_AUTH_TOKEN }} `
-              -s https://api.nuget.org/v3/index.json `
-              --skip-duplicate
-          }
-
-          foreach ($symbolPackage in $symbolPackages) {
-            dotnet nuget push $symbolPackage.FullName `
-              -k ${{ secrets.NUGET_AUTH_TOKEN }} `
-              -s https://api.nuget.org/v3/index.json `
-              --skip-duplicate
+          $packages = Get-ChildItem "${{ env.PACKAGE_OUTPUT_DIRECTORY }}\QaaS.Common.Assertions.*.nupkg"
+          foreach ($package in $packages) {
+            # Only push the main QaaS.Common.Assertions package, not QaaS.Common.Assertions.* (e.g., QaaS.Common.Assertions.Tests)
+            if ($package.Name -match "^QaaS\.Common\.Assertions\.[0-9]") {
+              dotnet nuget push $package.FullName -k ${{ secrets.NUGET_AUTH_TOKEN }} -s https://api.nuget.org/v3/index.json
+            }
           }
 

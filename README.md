@@ -1,6 +1,6 @@
 # QaaS.Common.Assertions
 
-Composable assertion package for validating QaaS test workflows.
+Composable .NET package for validating QaaS test workflows.
 
 [![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF)](./.github/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-qaas--docs-blue)](https://thesmoketeam.github.io/qaas-docs/)
@@ -10,17 +10,15 @@ Composable assertion package for validating QaaS test workflows.
 - [Overview](#overview)
 - [Packages](#packages)
 - [Functionalities](#functionalities)
-- [Architecture](#architecture)
-- [Install and Upgrade](#install-and-upgrade)
+- [Protocol Support](#protocol-support)
+- [Quick Start](#quick-start)
 - [Build and Test](#build-and-test)
 - [Documentation](#documentation)
 
 ## Overview
 This repository contains one solution: [`QaaS.Common.Assertions.sln`](./QaaS.Common.Assertions.sln).
 
-The solution is split into:
-- [`QaaS.Common.Assertions`](./QaaS.Common.Assertions/) - the NuGet package with built-in assertion implementations.
-- [`QaaS.Common.Assertions.Tests`](./QaaS.Common.Assertions.Tests/) - NUnit tests validating assertion behavior and edge cases.
+The solution is split into a focused package project and a test project so you can consume assertions as a NuGet package and validate behavior with a dedicated NUnit suite.
 
 ## Packages
 | Package | Latest Version | Total Downloads |
@@ -48,22 +46,26 @@ The solution is split into:
 - NUnit-based verification of assertion behaviors, edge cases, and failure traces.
 - Covers hermetic assertions, delay assertions, content validation, schema validation, deserialization, and HTTP metadata assertions.
 
-## Architecture
-| Layer | Project/Folder | Responsibility |
-|---|---|---|
-| Package | [`QaaS.Common.Assertions`](./QaaS.Common.Assertions/) | NuGet-distributed assertion implementations and assertion configuration objects. |
-| Assertion Domains | `Hermetic`, `Delay`, `ContentLogic`, `SchemaLogic`, `DeserializationLogic`, `HttpMetaDataLogic` | Domain-specific assertion logic used by QaaS execution workflows. |
-| Configurations | [`CommonAssertionsConfigs`](./QaaS.Common.Assertions/CommonAssertionsConfigs/) | Typed configuration contracts for every assertion and validator option. |
-| Tests | [`QaaS.Common.Assertions.Tests`](./QaaS.Common.Assertions.Tests/) | Validation suite for behavior correctness and regression protection. |
+## Protocol Support
+Supported assertion families in `QaaS.Common.Assertions`:
 
-## Install and Upgrade
-Install:
+| Family | Implementations |
+|---|---|
+| Hermetic | `HermeticByExpectedOutputCount`, `HermeticByExpectedOutputCountInRange`, `HermeticByInputOutputPercentage`, `HermeticByInputOutputPercentageInRange`, `ValidateHermeticMetricsByInputOutputPercentage` |
+| Delay | `DelayByAverage`, `DelayByChunks` |
+| Content Validation | `OutputContentByExpectedCsvResults` with exact/error-range/override/base64-to-hex field validators |
+| Schema Validation | `ObjectOutputJsonSchema` |
+| Deserialization | `OutputDeserializableTo` |
+| HTTP Metadata | `HttpStatus` |
+
+## Quick Start
+Install package:
 
 ```bash
 dotnet add package QaaS.Common.Assertions
 ```
 
-Upgrade:
+Update package:
 
 ```bash
 dotnet add package QaaS.Common.Assertions --version <TARGET_VERSION>
