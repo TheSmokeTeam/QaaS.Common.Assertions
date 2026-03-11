@@ -59,24 +59,31 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
         // Validate all output items
         var fieldValidationFactory = BuildFieldValidatorFactory();
         var jsonConverter = new JsonConverterFactory().BuildJsonConverter(Configuration.JsonConverterType);
-        int resultIndex = 0, invalidItems = 0, emptyItems = 0;
+        var unmatchedExpectedResults = _expectedResults.ToList();
+        int outputIndex = 0, invalidItems = 0, emptyItems = 0;
         var traceStringBuilder = new StringBuilder();
         foreach (var output in outputs)
         {
+            var currentOutputIndex = outputIndex++;
             if (output.Body == null)
             {
                 traceStringBuilder.Append(
-                    $"- Item in index {resultIndex} from output {Configuration.OutputName} is empty.\n");
+                    $"- Item in index {currentOutputIndex} from output {Configuration.OutputName} is empty.\n");
                 emptyItems++;
-                resultIndex++;
                 continue;
             }
 
             var body = jsonConverter.Convert(output.Body);
-            if (CheckIsOutputValid(body, _expectedResults[resultIndex++], fieldValidationFactory,
-                    out var invalidFields)) continue;
+            var matchingExpectedResult = FindMatchingExpectedResult(body, unmatchedExpectedResults, fieldValidationFactory,
+                out var invalidFields);
+            if (matchingExpectedResult != null)
+            {
+                unmatchedExpectedResults.Remove(matchingExpectedResult);
+                continue;
+            }
+
             traceStringBuilder.Append(
-                $"- Item in index {resultIndex} from output {Configuration.OutputName} did not match the expected result. " +
+                $"- Item in index {currentOutputIndex} from output {Configuration.OutputName} did not match any expected result. " +
                 $"Invalid fields: {string.Join(", ", invalidFields)}).\n");
             invalidItems++;
         }
@@ -177,5 +184,22 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
         }
 
         return invalidOutputFields.Count == 0;
+    }
+
+    private Dictionary<string, object?>? FindMatchingExpectedResult(JsonNode output,
+        IEnumerable<Dictionary<string, object?>> expectedResults, IFieldValidatorFactory fieldValidationFactory,
+        out IList<string> invalidOutputFields)
+    {
+        invalidOutputFields = [];
+        foreach (var expectedResult in expectedResults)
+        {
+            if (CheckIsOutputValid(output, expectedResult, fieldValidationFactory, out var candidateInvalidFields))
+                return expectedResult;
+
+            if (candidateInvalidFields.Count > invalidOutputFields.Count)
+                invalidOutputFields = candidateInvalidFields;
+        }
+
+        return null;
     }
 }
