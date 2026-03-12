@@ -388,4 +388,52 @@ public class AssertionOutputContentByExpectedCsvResultsTests
         StringAssert.Contains("100% match", assertion.AssertionMessage!);
         Assert.That(assertion.AssertionTrace, Is.Empty);
     }
+
+    [Test]
+    public void TestAssertionResultsAsCsv_WhenBroadValidatorMatchesMultipleRows_ShouldUseNonGreedyAssignment()
+    {
+        var firstJson = new JsonObject
+        {
+            { "age", "15" }
+        };
+        var secondJson = new JsonObject
+        {
+            { "age", "9" }
+        };
+
+        var sessionDataList = QaaSSdkObjectsUtils.BuildSessionList([firstJson, secondJson], OutputName).ToImmutableList();
+        var externalDataList = QaaSSdkObjectsUtils.BuildDataSourceList("resultsKey",
+            "AGE\n10\n20").ToImmutableList();
+        var assertion = new OutputContentByExpectedCsvResults
+        {
+            Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
+            {
+                OutputName = OutputName,
+                ResultsMetaDataStorageKey = "resultsKey",
+                ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>
+                {
+                    {
+                        "AGE", new FieldConfiguration
+                        {
+                            Path = "$.age",
+                            FieldValidationConfig = new FieldValidationConfig
+                            {
+                                Type = FieldValidationType.ErrorRange,
+                                ErrorRange = new ErrorRangeFieldValidatorConfig
+                                {
+                                    ErrorRange = 10
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = assertion.Assert(sessionDataList, externalDataList);
+
+        Assert.That(result, Is.True);
+        StringAssert.Contains("100% match", assertion.AssertionMessage!);
+        Assert.That(assertion.AssertionTrace, Is.Empty);
+    }
 }

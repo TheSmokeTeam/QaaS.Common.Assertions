@@ -21,7 +21,7 @@
         <PackageReference Include="JsonPath.Net" Version="3.0.1" />
         <PackageReference Include="JsonPointer.Net" Version="7.0.0" />
         <PackageReference Include="JsonSchema.Net" Version="9.1.2" />
-    <PackageReference Include="QaaS.Framework.Executions" Version="1.2.0-alpha.10" />
+    <PackageReference Include="QaaS.Framework.Executions" Version="1.1.1-alpha.3" />
     </ItemGroup>
 
     <ItemGroup>

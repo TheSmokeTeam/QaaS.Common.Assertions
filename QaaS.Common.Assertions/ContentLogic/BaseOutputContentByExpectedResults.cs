@@ -62,6 +62,14 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
         var unmatchedExpectedResults = _expectedResults.ToList();
         int outputIndex = 0, invalidItems = 0, emptyItems = 0;
         var traceStringBuilder = new StringBuilder();
+        var outputsWithBody = outputs
+            .Select((output, index) => new { Output = output, Index = index })
+            .Where(item => item.Output.Body != null)
+            .Select(item => new OutputWithIndex(item.Index, jsonConverter.Convert(item.Output.Body!)))
+            .ToList();
+        var matchedExpectedResults = TryFindOutputAssignments(outputsWithBody, unmatchedExpectedResults,
+            fieldValidationFactory);
+
         foreach (var output in outputs)
         {
             var currentOutputIndex = outputIndex++;
@@ -74,8 +82,20 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
             }
 
             var body = jsonConverter.Convert(output.Body);
-            var matchingExpectedResult = FindMatchingExpectedResult(body, unmatchedExpectedResults, fieldValidationFactory,
-                out var invalidFields);
+            Dictionary<string, object?>? matchingExpectedResult = null;
+            IList<string> invalidFields;
+            if (matchedExpectedResults != null &&
+                matchedExpectedResults.TryGetValue(currentOutputIndex, out var globallyMatchedExpectedResult))
+            {
+                matchingExpectedResult = globallyMatchedExpectedResult;
+                invalidFields = [];
+            }
+            else
+            {
+                matchingExpectedResult = FindMatchingExpectedResult(body, unmatchedExpectedResults, fieldValidationFactory,
+                    out invalidFields);
+            }
+
             if (matchingExpectedResult != null)
             {
                 unmatchedExpectedResults.Remove(matchingExpectedResult);
@@ -186,6 +206,43 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
         return invalidOutputFields.Count == 0;
     }
 
+    private Dictionary<int, Dictionary<string, object?>>? TryFindOutputAssignments(
+        IReadOnlyList<OutputWithIndex> outputs, IList<Dictionary<string, object?>> expectedResults,
+        IFieldValidatorFactory fieldValidationFactory)
+    {
+        var assignedExpectedResults = new Dictionary<int, Dictionary<string, object?>>();
+        return TryFindOutputAssignments(outputs, 0, expectedResults, fieldValidationFactory, assignedExpectedResults)
+            ? assignedExpectedResults
+            : null;
+    }
+
+    private bool TryFindOutputAssignments(IReadOnlyList<OutputWithIndex> outputs, int outputPosition,
+        IList<Dictionary<string, object?>> expectedResults, IFieldValidatorFactory fieldValidationFactory,
+        Dictionary<int, Dictionary<string, object?>> assignedExpectedResults)
+    {
+        if (outputPosition == outputs.Count)
+            return true;
+
+        var output = outputs[outputPosition];
+        for (var expectedResultIndex = 0; expectedResultIndex < expectedResults.Count; expectedResultIndex++)
+        {
+            var expectedResult = expectedResults[expectedResultIndex];
+            if (!CheckIsOutputValid(output.Body, expectedResult, fieldValidationFactory, out _))
+                continue;
+
+            assignedExpectedResults[output.Index] = expectedResult;
+            expectedResults.RemoveAt(expectedResultIndex);
+            if (TryFindOutputAssignments(outputs, outputPosition + 1, expectedResults, fieldValidationFactory,
+                    assignedExpectedResults))
+                return true;
+
+            expectedResults.Insert(expectedResultIndex, expectedResult);
+            assignedExpectedResults.Remove(output.Index);
+        }
+
+        return false;
+    }
+
     private Dictionary<string, object?>? FindMatchingExpectedResult(JsonNode output,
         IEnumerable<Dictionary<string, object?>> expectedResults, IFieldValidatorFactory fieldValidationFactory,
         out IList<string> invalidOutputFields)
@@ -202,4 +259,6 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
 
         return null;
     }
+
+    private sealed record OutputWithIndex(int Index, JsonNode Body);
 }
