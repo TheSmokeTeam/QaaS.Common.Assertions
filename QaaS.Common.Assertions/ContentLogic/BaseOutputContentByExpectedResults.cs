@@ -59,24 +59,57 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
         // Validate all output items
         var fieldValidationFactory = BuildFieldValidatorFactory();
         var jsonConverter = new JsonConverterFactory().BuildJsonConverter(Configuration.JsonConverterType);
-        int resultIndex = 0, invalidItems = 0, emptyItems = 0;
+        int outputIndex = 0, invalidItems = 0, emptyItems = 0;
         var traceStringBuilder = new StringBuilder();
+        var unmatchedExpectedResults = Configuration.CompareRowsNotInOrder ? _expectedResults.ToList() : null;
+        var matchedExpectedResults = Configuration.CompareRowsNotInOrder
+            ? TryFindOutputAssignments(outputs
+                    .Select((output, index) => new { Output = output, Index = index })
+                    .Where(item => item.Output.Body != null)
+                    .Select(item => new OutputWithIndex(item.Index, jsonConverter.Convert(item.Output.Body!)))
+                    .ToList(),
+                unmatchedExpectedResults!, fieldValidationFactory)
+            : null;
+
         foreach (var output in outputs)
         {
+            var currentOutputIndex = outputIndex++;
             if (output.Body == null)
             {
                 traceStringBuilder.Append(
-                    $"- Item in index {resultIndex} from output {Configuration.OutputName} is empty.\n");
+                    $"- Item in index {currentOutputIndex} from output {Configuration.OutputName} is empty.\n");
                 emptyItems++;
-                resultIndex++;
                 continue;
             }
 
             var body = jsonConverter.Convert(output.Body);
-            if (CheckIsOutputValid(body, _expectedResults[resultIndex++], fieldValidationFactory,
-                    out var invalidFields)) continue;
+            Dictionary<string, object?>? matchingExpectedResult = null;
+            IList<string> invalidFields = [];
+            if (!Configuration.CompareRowsNotInOrder)
+            {
+                matchingExpectedResult = _expectedResults[currentOutputIndex];
+                if (!CheckIsOutputValid(body, matchingExpectedResult, fieldValidationFactory, out invalidFields))
+                    matchingExpectedResult = null;
+            }
+            else if (matchedExpectedResults != null &&
+                matchedExpectedResults.TryGetValue(currentOutputIndex, out var globallyMatchedExpectedResult))
+            {
+                matchingExpectedResult = globallyMatchedExpectedResult;
+            }
+            else
+            {
+                matchingExpectedResult = FindMatchingExpectedResult(body, unmatchedExpectedResults!, fieldValidationFactory,
+                    out invalidFields);
+            }
+
+            if (matchingExpectedResult != null)
+            {
+                unmatchedExpectedResults?.Remove(matchingExpectedResult);
+                continue;
+            }
+
             traceStringBuilder.Append(
-                $"- Item in index {resultIndex} from output {Configuration.OutputName} did not match the expected result. " +
+                $"- Item in index {currentOutputIndex} from output {Configuration.OutputName} did not match any expected result. " +
                 $"Invalid fields: {string.Join(", ", invalidFields)}).\n");
             invalidItems++;
         }
@@ -178,4 +211,60 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
 
         return invalidOutputFields.Count == 0;
     }
+
+    private Dictionary<int, Dictionary<string, object?>>? TryFindOutputAssignments(
+        IReadOnlyList<OutputWithIndex> outputs, IList<Dictionary<string, object?>> expectedResults,
+        IFieldValidatorFactory fieldValidationFactory)
+    {
+        var assignedExpectedResults = new Dictionary<int, Dictionary<string, object?>>();
+        return TryFindOutputAssignments(outputs, 0, expectedResults, fieldValidationFactory, assignedExpectedResults)
+            ? assignedExpectedResults
+            : null;
+    }
+
+    private bool TryFindOutputAssignments(IReadOnlyList<OutputWithIndex> outputs, int outputPosition,
+        IList<Dictionary<string, object?>> expectedResults, IFieldValidatorFactory fieldValidationFactory,
+        Dictionary<int, Dictionary<string, object?>> assignedExpectedResults)
+    {
+        if (outputPosition == outputs.Count)
+            return true;
+
+        var output = outputs[outputPosition];
+        for (var expectedResultIndex = 0; expectedResultIndex < expectedResults.Count; expectedResultIndex++)
+        {
+            var expectedResult = expectedResults[expectedResultIndex];
+            if (!CheckIsOutputValid(output.Body, expectedResult, fieldValidationFactory, out _))
+                continue;
+
+            assignedExpectedResults[output.Index] = expectedResult;
+            expectedResults.RemoveAt(expectedResultIndex);
+            if (TryFindOutputAssignments(outputs, outputPosition + 1, expectedResults, fieldValidationFactory,
+                    assignedExpectedResults))
+                return true;
+
+            expectedResults.Insert(expectedResultIndex, expectedResult);
+            assignedExpectedResults.Remove(output.Index);
+        }
+
+        return false;
+    }
+
+    private Dictionary<string, object?>? FindMatchingExpectedResult(JsonNode output,
+        IEnumerable<Dictionary<string, object?>> expectedResults, IFieldValidatorFactory fieldValidationFactory,
+        out IList<string> invalidOutputFields)
+    {
+        invalidOutputFields = [];
+        foreach (var expectedResult in expectedResults)
+        {
+            if (CheckIsOutputValid(output, expectedResult, fieldValidationFactory, out var candidateInvalidFields))
+                return expectedResult;
+
+            if (candidateInvalidFields.Count > invalidOutputFields.Count)
+                invalidOutputFields = candidateInvalidFields;
+        }
+
+        return null;
+    }
+
+    private sealed record OutputWithIndex(int Index, JsonNode Body);
 }
