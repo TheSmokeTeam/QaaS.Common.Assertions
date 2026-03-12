@@ -32,6 +32,10 @@ public record OutputContentByExpectedResultsConfiguration
     [Description("The type of json converter to use for converting the output items")]
     [DefaultValue(JsonConverterType.Json)]
     public JsonConverterType JsonConverterType { get; set; }
+
+    [Description("If true, rows can match expected results in any order instead of by their index")]
+    [DefaultValue(false)]
+    public bool CompareRowsNotInOrder { get; set; }
 }
 
 public record FieldConfiguration

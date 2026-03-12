@@ -354,6 +354,7 @@ public class AssertionOutputContentByExpectedCsvResultsTests
             Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
             {
                 OutputName = OutputName,
+                CompareRowsNotInOrder = true,
                 ResultsMetaDataStorageKey = "resultsKey",
                 ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>
                 {
@@ -390,6 +391,64 @@ public class AssertionOutputContentByExpectedCsvResultsTests
     }
 
     [Test]
+    public void TestAssertionResultsAsCsv_WhenRowsAreOutOfOrderAndOptionDisabled_ShouldFail()
+    {
+        var firstJson = new JsonObject
+        {
+            { "name", "Bob" },
+            { "age", "31" },
+            { "city", "Paris" }
+        };
+        var secondJson = new JsonObject
+        {
+            { "name", "Alice" },
+            { "age", "20" },
+            { "city", "Boston" }
+        };
+
+        var sessionDataList = QaaSSdkObjectsUtils.BuildSessionList([firstJson, secondJson], OutputName).ToImmutableList();
+        var externalDataList = QaaSSdkObjectsUtils.BuildDataSourceList("resultsKey",
+            "NAME,AGE,CITY\nAlice,20,Boston\nBob,31,Paris").ToImmutableList();
+        var assertion = new OutputContentByExpectedCsvResults
+        {
+            Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
+            {
+                OutputName = OutputName,
+                ResultsMetaDataStorageKey = "resultsKey",
+                ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>
+                {
+                    {
+                        "NAME", new FieldConfiguration
+                        {
+                            Path = "$.name",
+                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                        }
+                    },
+                    {
+                        "AGE", new FieldConfiguration
+                        {
+                            Path = "$.age",
+                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                        }
+                    },
+                    {
+                        "CITY", new FieldConfiguration
+                        {
+                            Path = "$.city",
+                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                        }
+                    }
+                }
+            }
+        };
+
+        var result = assertion.Assert(sessionDataList, externalDataList);
+
+        Assert.That(result, Is.False);
+        StringAssert.Contains("0% match", assertion.AssertionMessage!);
+    }
+
+    [Test]
     public void TestAssertionResultsAsCsv_WhenBroadValidatorMatchesMultipleRows_ShouldUseNonGreedyAssignment()
     {
         var firstJson = new JsonObject
@@ -409,6 +468,7 @@ public class AssertionOutputContentByExpectedCsvResultsTests
             Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
             {
                 OutputName = OutputName,
+                CompareRowsNotInOrder = true,
                 ResultsMetaDataStorageKey = "resultsKey",
                 ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>
                 {

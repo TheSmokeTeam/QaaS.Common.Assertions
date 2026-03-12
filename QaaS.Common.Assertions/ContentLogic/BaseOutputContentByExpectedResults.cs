@@ -59,16 +59,17 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
         // Validate all output items
         var fieldValidationFactory = BuildFieldValidatorFactory();
         var jsonConverter = new JsonConverterFactory().BuildJsonConverter(Configuration.JsonConverterType);
-        var unmatchedExpectedResults = _expectedResults.ToList();
         int outputIndex = 0, invalidItems = 0, emptyItems = 0;
         var traceStringBuilder = new StringBuilder();
-        var outputsWithBody = outputs
-            .Select((output, index) => new { Output = output, Index = index })
-            .Where(item => item.Output.Body != null)
-            .Select(item => new OutputWithIndex(item.Index, jsonConverter.Convert(item.Output.Body!)))
-            .ToList();
-        var matchedExpectedResults = TryFindOutputAssignments(outputsWithBody, unmatchedExpectedResults,
-            fieldValidationFactory);
+        var unmatchedExpectedResults = Configuration.CompareRowsNotInOrder ? _expectedResults.ToList() : null;
+        var matchedExpectedResults = Configuration.CompareRowsNotInOrder
+            ? TryFindOutputAssignments(outputs
+                    .Select((output, index) => new { Output = output, Index = index })
+                    .Where(item => item.Output.Body != null)
+                    .Select(item => new OutputWithIndex(item.Index, jsonConverter.Convert(item.Output.Body!)))
+                    .ToList(),
+                unmatchedExpectedResults!, fieldValidationFactory)
+            : null;
 
         foreach (var output in outputs)
         {
@@ -83,22 +84,27 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
 
             var body = jsonConverter.Convert(output.Body);
             Dictionary<string, object?>? matchingExpectedResult = null;
-            IList<string> invalidFields;
-            if (matchedExpectedResults != null &&
+            IList<string> invalidFields = [];
+            if (!Configuration.CompareRowsNotInOrder)
+            {
+                matchingExpectedResult = _expectedResults[currentOutputIndex];
+                if (!CheckIsOutputValid(body, matchingExpectedResult, fieldValidationFactory, out invalidFields))
+                    matchingExpectedResult = null;
+            }
+            else if (matchedExpectedResults != null &&
                 matchedExpectedResults.TryGetValue(currentOutputIndex, out var globallyMatchedExpectedResult))
             {
                 matchingExpectedResult = globallyMatchedExpectedResult;
-                invalidFields = [];
             }
             else
             {
-                matchingExpectedResult = FindMatchingExpectedResult(body, unmatchedExpectedResults, fieldValidationFactory,
+                matchingExpectedResult = FindMatchingExpectedResult(body, unmatchedExpectedResults!, fieldValidationFactory,
                     out invalidFields);
             }
 
             if (matchingExpectedResult != null)
             {
-                unmatchedExpectedResults.Remove(matchingExpectedResult);
+                unmatchedExpectedResults?.Remove(matchingExpectedResult);
                 continue;
             }
 
