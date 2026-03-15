@@ -3,7 +3,8 @@
 Composable .NET package for validating QaaS test workflows.
 
 [![CI](https://github.com/TheSmokeTeam/QaaS.Common.Assertions/actions/workflows/ci.yml/badge.svg)](https://github.com/TheSmokeTeam/QaaS.Common.Assertions/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/eldarush/509510e0964a67e6182297b28857c07b/raw/coverage-badge.json)](https://github.com/TheSmokeTeam/QaaS.Common.Assertions/actions/workflows/ci.yml)
+[![Line Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/eldarush/509510e0964a67e6182297b28857c07b/raw/line-coverage-badge.json)](https://github.com/TheSmokeTeam/QaaS.Common.Assertions/actions/workflows/ci.yml)
+[![Branch Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/eldarush/509510e0964a67e6182297b28857c07b/raw/branch-coverage-badge.json)](https://github.com/TheSmokeTeam/QaaS.Common.Assertions/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-qaas--docs-blue)](https://thesmoketeam.github.io/qaas-docs/)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/)
 
