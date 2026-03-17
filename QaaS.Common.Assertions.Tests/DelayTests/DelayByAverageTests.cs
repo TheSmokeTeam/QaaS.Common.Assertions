@@ -31,7 +31,7 @@ public class DelayByAverageTests
     {
         // Arrange
         const string name = "Test";
-        var inputList = new List<DetailedData<object>>();
+        var inputList = new List<DetailedData<object>>(inputListSize);
         for (var index = 0; index < inputListSize; index++)
         {
             inputList.Add(new DetailedData<object>{Body=null, Timestamp = 
@@ -39,7 +39,7 @@ public class DelayByAverageTests
         }
         var input = new CommunicationData<object> { Name = name, Data = inputList };
 
-        var outputList = new List<DetailedData<object>>();
+        var outputList = new List<DetailedData<object>>(outputListSize);
         for (var index = 0; index < outputListSize; index++)
         {
             outputList.Add(new DetailedData<object>{Body=null, Timestamp =
