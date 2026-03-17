@@ -28,6 +28,22 @@ public class DelayByChunksTests
         .GetMethod("GetListOfChunkTimes", 
         BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(byte[]));
 
+    private static List<DetailedData<object>> CreateDetailedDataList(int listSize, long baseDateTimeTicks, int timeDifferenceMs = 0)
+    {
+        var list = new List<DetailedData<object>>(listSize);
+        var offsetTicks = timeDifferenceMs * 10_000L;
+        for (var index = 0; index < listSize; index++)
+        {
+            list.Add(new DetailedData<object>
+            {
+                Body = null,
+                Timestamp = new DateTime(baseDateTimeTicks + index + offsetTicks)
+            });
+        }
+
+        return list;
+    }
+
     private static IEnumerable<TestCaseData> TestGetListOfChunkTimesCaseSource()
     {
         const long baseDateTimeTicks = 10_000_000_000_000;
@@ -102,7 +118,7 @@ public class DelayByChunksTests
     {
         // Arrange
         const long baseDateTimeTicks = 10_000_000_000_000;
-        var list = new List<DetailedData<byte[]>>();
+        var list = new List<DetailedData<byte[]>>(listSize);
         for (var listIndex = 0; listIndex < listSize; listIndex++)
         {
             list.Add(new DetailedData<byte[]>{Body = null, Timestamp = new DateTime(
@@ -130,20 +146,11 @@ public class DelayByChunksTests
         // Arrange
         const string name = "test";
         const long baseDateTimeTicksToNotReachNegativeDelay = 10_000_000_000_000;
-        var inputList = new List<DetailedData<object>>();
-        for (var index = 0; index < inputListSize; index++)
-        {
-            inputList.Add(new DetailedData<object>{Body = null, Timestamp = new DateTime(
-                baseDateTimeTicksToNotReachNegativeDelay + index)});
-        }
-
-        var outputList = new List<DetailedData<object>>();
-        for (var index = 0; index < outputListSize; index++)
-        {
-            outputList.Add(new DetailedData<object>{Body = null, Timestamp = new DateTime(
-                baseDateTimeTicksToNotReachNegativeDelay + index +
-                timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds * 10_000)});
-        }
+        var inputList = CreateDetailedDataList(inputListSize, baseDateTimeTicksToNotReachNegativeDelay);
+        var outputList = CreateDetailedDataList(
+            outputListSize,
+            baseDateTimeTicksToNotReachNegativeDelay,
+            timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds);
         
         var configurations = new DelayByChunksConfiguration
         {
@@ -238,20 +245,11 @@ public class DelayByChunksTests
         // Arrange
         const string name = "test";
         const long baseDateTimeTicksToNotReachNegativeDelay = 10_000_000_000_000;
-        var outputList = new List<DetailedData<object>>();
-        for (var index = 0; index < outputListSize; index++)
-        {
-            outputList.Add(new DetailedData<object>{Body = null, Timestamp = new DateTime(
-                baseDateTimeTicksToNotReachNegativeDelay + index)});
-        }
-        
-        var inputList = new List<DetailedData<object>>();
-        for (var index = 0; index < inputListSize; index++)
-        {
-            inputList.Add(new DetailedData<object>{Body = null, Timestamp = new DateTime(
-                baseDateTimeTicksToNotReachNegativeDelay + index +
-                timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds * 10_000)});
-        }
+        var outputList = CreateDetailedDataList(outputListSize, baseDateTimeTicksToNotReachNegativeDelay);
+        var inputList = CreateDetailedDataList(
+            inputListSize,
+            baseDateTimeTicksToNotReachNegativeDelay,
+            timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds);
         var session = new SessionData
         {
             Name = "Id",
@@ -322,19 +320,11 @@ public class DelayByChunksTests
         const string name = "test";
         const long baseDateTimeTicksToNotReachNegativeDelay = 10_000_000_000_000;
         
-        var inputList = new List<DetailedData<object>>();
-        for (var index = 0; index < inputListSize; index++)
-        {
-            inputList.Add(new DetailedData<object>{Body = null, Timestamp = new DateTime(
-                baseDateTimeTicksToNotReachNegativeDelay + index)});
-        }
-        var outputList = new List<DetailedData<object>>();
-        for (var index = 0; index < outputListSize; index++)
-        {
-            outputList.Add(new DetailedData<object>{Body = null, Timestamp = new DateTime(
-                baseDateTimeTicksToNotReachNegativeDelay + index +
-                timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds * 10_000)});
-        }
+        var inputList = CreateDetailedDataList(inputListSize, baseDateTimeTicksToNotReachNegativeDelay);
+        var outputList = CreateDetailedDataList(
+            outputListSize,
+            baseDateTimeTicksToNotReachNegativeDelay,
+            timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds);
         var session = new SessionData
         {
             Name = "Id",
