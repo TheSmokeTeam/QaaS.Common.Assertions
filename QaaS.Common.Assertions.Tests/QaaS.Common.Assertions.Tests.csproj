@@ -16,9 +16,9 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-    <PackageReference Include="QaaS.Framework.Configurations" Version="1.2.5-alpha.1" />
-    <PackageReference Include="QaaS.Framework.SDK" Version="1.2.5-alpha.1" />
-    <PackageReference Include="QaaS.Framework.Serialization" Version="1.2.5-alpha.1" />
+    <PackageReference Include="QaaS.Framework.Configurations" Version="1.2.5" />
+    <PackageReference Include="QaaS.Framework.SDK" Version="1.2.5" />
+    <PackageReference Include="QaaS.Framework.Serialization" Version="1.2.5" />
         <PackageReference Include="Serilog.Sinks.NUnit" Version="1.0.3" />
     </ItemGroup>
 
