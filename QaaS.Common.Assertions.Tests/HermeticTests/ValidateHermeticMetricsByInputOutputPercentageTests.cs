@@ -283,4 +283,92 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
 
         Assert.That(result, Is.False);
     }
+
+    [Test]
+    public void TestAssertSingleSession_CallAssertFunctionWithInputsAreOutputs_ShouldUseOutputsAsInputSource()
+    {
+        var timestamp = DateTime.UtcNow;
+        var sessionDataList = new List<SessionData>
+        {
+            new()
+            {
+                Name = SessionName,
+                Outputs =
+                [
+                    new CommunicationData<object>
+                    {
+                        Name = "inputAsOutput",
+                        Data =
+                        [
+                            new DetailedData<object> { Body = 1, Timestamp = timestamp },
+                            new DetailedData<object> { Body = 2, Timestamp = timestamp },
+                            new DetailedData<object> { Body = 3, Timestamp = timestamp },
+                            new DetailedData<object> { Body = 4, Timestamp = timestamp }
+                        ]
+                    },
+                    new CommunicationData<object>
+                    {
+                        Name = "output",
+                        Data =
+                        [
+                            new DetailedData<object> { Body = 1, Timestamp = timestamp },
+                            new DetailedData<object> { Body = 2, Timestamp = timestamp }
+                        ]
+                    },
+                    new CommunicationData<object>
+                    {
+                        Name = CollectorName,
+                        Data =
+                        [
+                            new DetailedData<object>
+                            {
+                                Body = new JsonObject
+                                {
+                                    {
+                                        Metric, new JsonObject
+                                        {
+                                            { NameProperty, InputMetricName }
+                                        }
+                                    },
+                                    { ValueProperty, "4" }
+                                },
+                                Timestamp = timestamp
+                            },
+                            new DetailedData<object>
+                            {
+                                Body = new JsonObject
+                                {
+                                    {
+                                        Metric, new JsonObject
+                                        {
+                                            { NameProperty, OutputMetricName }
+                                        }
+                                    },
+                                    { ValueProperty, "2" }
+                                },
+                                Timestamp = timestamp
+                            }
+                        ]
+                    }
+                ]
+            }
+        }.ToImmutableList();
+        var assertion = new ValidateHermeticMetricsByInputOutputPercentage
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new ValidateHermeticMetricsByInputOutputPercentageConfig
+            {
+                InputMetricName = InputMetricName,
+                OutputMetricName = OutputMetricName,
+                InputNames = ["inputAsOutput"],
+                InputsAreOutputs = true,
+                OutputNames = ["output"],
+                MetricOutputSourceName = CollectorName
+            }
+        };
+
+        var result = assertion.Assert(sessionDataList, ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+    }
 }

@@ -14,6 +14,11 @@ public record DelayByAverageConfiguration
     public string? OutputName { get; set; }
     [Required, Description("Name of the input end point to check the inputs of")]
     public string? InputName { get; set; }
+
+    [Description($"Whether the given input in {nameof(InputName)} is actually another outputs list"),
+     DefaultValue(false)]
+    public bool InputsAreOutputs { get; set; } = false;
+
     [Required, Range(0, long.MaxValue), 
      Description("maximum delay in milliseconds allowed for average delay for assertion to pass")]
     public long? MaximumDelayMs { get; set; }

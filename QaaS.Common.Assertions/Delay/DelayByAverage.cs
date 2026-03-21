@@ -26,7 +26,9 @@ public class DelayByAverage: BaseAssertion<DelayByAverageConfiguration>
     {
         var sessionData = sessionDataList.AsSingle();
         var output = sessionData.GetOutputByName(Configuration.OutputName!);
-        var input = sessionData.GetInputByName(Configuration.InputName!);
+        var input = Configuration.InputsAreOutputs
+            ? sessionData.GetOutputByName(Configuration.InputName!)
+            : sessionData.GetInputByName(Configuration.InputName!);
         var outputCount = output.Data.Count;
         var inputCount = input.Data.Count;
          

@@ -27,7 +27,9 @@ public class DelayByChunks: BaseAssertion<DelayByChunksConfiguration>
     {
         var sessionData = sessionDataList.AsSingle();
         var output = sessionData.GetOutputByName(Configuration.Output!.Name!);
-        var input = sessionData.GetInputByName(Configuration.Input!.Name!);
+        var input = Configuration.InputsAreOutputs
+            ? sessionData.GetOutputByName(Configuration.Input!.Name!)
+            : sessionData.GetInputByName(Configuration.Input!.Name!);
         var outputCount = output.Data.Count;
         var inputCount = input.Data.Count;
          

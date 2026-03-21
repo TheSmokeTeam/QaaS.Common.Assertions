@@ -314,6 +314,54 @@ public class DelayByAverageTests
     }
 
     [Test]
+    public void TestAssertSingleSession_CallFunctionWithInputsAreOutputs_ShouldUseConfiguredOutputAsInputSource()
+    {
+        const string inputAsOutputName = "inputAsOutput";
+        const string outputName = "result";
+        var session = new SessionData
+        {
+            Name = "Id",
+            Outputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = inputAsOutputName,
+                    Data = new List<DetailedData<object>>
+                    {
+                        new() { Body = null, Timestamp = new DateTime(10_000) },
+                        new() { Body = null, Timestamp = new DateTime(20_000) }
+                    }
+                },
+                new()
+                {
+                    Name = outputName,
+                    Data = new List<DetailedData<object>>
+                    {
+                        new() { Body = null, Timestamp = new DateTime(20_000) },
+                        new() { Body = null, Timestamp = new DateTime(30_000) }
+                    }
+                }
+            }
+        };
+        var assertion = new DelayByAverage
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new DelayByAverageConfiguration
+            {
+                InputName = inputAsOutputName,
+                InputsAreOutputs = true,
+                OutputName = outputName,
+                MaximumDelayMs = 1
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+        StringAssert.Contains("Average Delay between all inputs to all outputs", assertion.AssertionMessage!);
+    }
+
+    [Test]
     public void TestAssertSingleSession_CallFunctionWithInputWithoutTimestamp_ShouldThrowNotSupportedException()
     {
         const string name = "Test";
