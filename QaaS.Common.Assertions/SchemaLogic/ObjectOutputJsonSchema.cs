@@ -13,6 +13,14 @@ namespace QaaS.Common.Assertions.SchemaLogic;
 
 public class ObjectOutputJsonSchema : BaseAssertion<ObjectOutputJsonSchemaConfiguration>
 {
+    private sealed record OutputValidationSummary(
+        int Index,
+        IReadOnlyList<string> MatchingSchemas,
+        IReadOnlyList<KeyValuePair<string, List<string>>> FailedSchemas)
+    {
+        public bool Passed => MatchingSchemas.Count > 0;
+    }
+
     /// <inheritdoc />
     public override bool Assert(IImmutableList<SessionData> sessionDataList, IImmutableList<DataSource> dataSourceList)
     {
@@ -39,8 +47,10 @@ public class ObjectOutputJsonSchema : BaseAssertion<ObjectOutputJsonSchemaConfig
         
         // Validate all output items
         var invalidJsons = 0;
+        var validJsons = 0;
         var jsonOutputIndex = 0;
         var traceStringBuilder = new StringBuilder();
+        var outputValidationSummaries = new List<OutputValidationSummary>();
         var sessionData = sessionDataList.AsSingle();
         foreach (var outputItem in sessionData.GetOutputByName(Configuration.OutputName!).Data)
         {
@@ -64,8 +74,8 @@ public class ObjectOutputJsonSchema : BaseAssertion<ObjectOutputJsonSchemaConfig
           
             
             // Check if json item is valid according to at least one of the given schemas
-            var isValid = false;
-            var validationResults = new List<KeyValuePair<string, string>>();
+            var matchingSchemas = new List<string>();
+            var failedSchemas = new List<KeyValuePair<string, List<string>>>();
             foreach (var jsonSchema in jsonSchemas)
             {
                 var evaluationResults = jsonSchema.Value.Evaluate(deserializedOutputElement, new EvaluationOptions
@@ -74,36 +84,50 @@ public class ObjectOutputJsonSchema : BaseAssertion<ObjectOutputJsonSchemaConfig
                 });
                 if (evaluationResults.IsValid)
                 {
-                    isValid = true;
+                    matchingSchemas.Add(jsonSchema.Key);
                     continue;
                 }
 
-                var evaluationStringMessages = new List<string>();
-                AddEvaluationResultsToEvaluationStringMessagesAsString(evaluationResults, ref evaluationStringMessages);
-                foreach (var nodeEvaluationResult in evaluationResults.Details ?? [])
-                {
-                    if (!nodeEvaluationResult.IsValid)
-                        AddEvaluationResultsToEvaluationStringMessagesAsString(nodeEvaluationResult, ref evaluationStringMessages);
-                }
-                validationResults.Add(new KeyValuePair<string, string>(jsonSchema.Key,
-                    string.Join("\n \t- " , evaluationStringMessages)));
-            }
-            if (!isValid)
-            {
-                var jsonSchemaFailureReasons = string.Join("\n - ",
-                    validationResults.Select(pair => $"Schema: {pair.Key}, Validation Errors: \n \t- {pair.Value}")
-                        .ToArray());
-                traceStringBuilder.Append($"\nJson output item at index {jsonOutputIndex} failed validation with " +
-                                          $"the following schemas: \n - {jsonSchemaFailureReasons}\n");
-                invalidJsons++;
+                var evaluationStringMessages = GetEvaluationMessages(evaluationResults);
+                failedSchemas.Add(new KeyValuePair<string, List<string>>(
+                    jsonSchema.Key,
+                    evaluationStringMessages));
             }
 
+            var outputValidationSummary = new OutputValidationSummary(
+                jsonOutputIndex,
+                matchingSchemas,
+                failedSchemas);
+            outputValidationSummaries.Add(outputValidationSummary);
+
+            if (!outputValidationSummary.Passed)
+            {
+                invalidJsons++;
+                traceStringBuilder.Append(BuildDetailedTraceForOutput(outputValidationSummary));
+                jsonOutputIndex++;
+                continue;
+            }
+
+            validJsons++;
+            traceStringBuilder.Append(BuildDetailedTraceForOutput(outputValidationSummary));
             jsonOutputIndex++;
         }
 
-        AssertionMessage = $"{invalidJsons} json items from output {Configuration.OutputName!} did not pass " +
-                           $"any of the following given json schemas validation: " +
-                           $"{string.Join("\n-", jsonSchemas.Select(pair => pair.Key).ToArray())}";
+        var totalOutputs = outputValidationSummaries.Count;
+        var overallResult = invalidJsons switch
+        {
+            0 => "ALL_PASS",
+            _ when validJsons == 0 => "ALL_FAIL",
+            _ => "PARTIAL_PASS"
+        };
+        var itemResults = outputValidationSummaries.Count == 0
+            ? "none"
+            : string.Join(" || ", outputValidationSummaries.Select(BuildOutputSummaryMessage));
+        AssertionMessage =
+            $"JSON schema validation summary for output {Configuration.OutputName!}: overall result {overallResult}. " +
+            $"Total items: {totalOutputs}. Passed: {validJsons}. Failed: {invalidJsons}. " +
+            $"Provided schemas ({jsonSchemas.Count}): {FormatSchemaList(jsonSchemas.Select(pair => pair.Key))}. " +
+            $"Item results: {itemResults}";
         AssertionTrace = traceStringBuilder.ToString();
         return invalidJsons <= 0;
     }
@@ -119,15 +143,92 @@ public class ObjectOutputJsonSchema : BaseAssertion<ObjectOutputJsonSchemaConfig
         return JsonNode.Parse(bodyAsJsonString);
     }
 
-    private static void AddEvaluationResultsToEvaluationStringMessagesAsString(EvaluationResults evaluationResults,
-        ref List<string> evaluationStringMessages)
+    private static List<string> GetEvaluationMessages(EvaluationResults evaluationResults)
+    {
+        var evaluationStringMessages = new List<string>();
+        AddEvaluationResultsToEvaluationStringMessagesAsString(evaluationResults, evaluationStringMessages);
+        return evaluationStringMessages.Distinct().ToList();
+    }
+
+    private static void AddEvaluationResultsToEvaluationStringMessagesAsString(
+        EvaluationResults evaluationResults,
+        List<string> evaluationStringMessages)
     {
         if (evaluationResults.Errors is null || evaluationResults.Errors.Count == 0)
+        {
+            foreach (var nestedEvaluationResult in evaluationResults.Details ?? [])
+                AddEvaluationResultsToEvaluationStringMessagesAsString(nestedEvaluationResult, evaluationStringMessages);
+
             return;
-        var errorsString = string.Join(" | " ,evaluationResults.Errors.Select(pair =>
-                $"Error Type: {pair.Key}, Error Message: {pair.Value}"));
+        }
+
+        var errorsString = string.Join(" | ", evaluationResults.Errors.Select(pair =>
+            $"Error Type: {pair.Key}, Error Message: {pair.Value}"));
         evaluationStringMessages.Add(
-            $"Schema Path: '{evaluationResults.EvaluationPath}', Json Path: '{evaluationResults.InstanceLocation}'," +
-            $" Errors: [{errorsString}]");
+            $"Json Path: '{NormalizeJsonPath(evaluationResults.InstanceLocation.ToString())}', " +
+            $"Schema Path: '{NormalizeJsonPath(evaluationResults.EvaluationPath.ToString())}', Errors: [{errorsString}]");
+
+        foreach (var nestedEvaluationResult in evaluationResults.Details ?? [])
+            AddEvaluationResultsToEvaluationStringMessagesAsString(nestedEvaluationResult, evaluationStringMessages);
+    }
+
+    private static string GetFirstValidationLine(string validationResult)
+    {
+        return validationResult
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .FirstOrDefault() ?? "Validation failed";
+    }
+
+    private static string NormalizeJsonPath(string? path)
+    {
+        return string.IsNullOrWhiteSpace(path) ? "$" : path;
+    }
+
+    private static string BuildOutputSummaryMessage(OutputValidationSummary outputValidationSummary)
+    {
+        var failedSchemasSummary = outputValidationSummary.FailedSchemas.Count == 0
+            ? outputValidationSummary.Passed
+                ? "none"
+                : "no schemas were provided"
+            : string.Join(" | ", outputValidationSummary.FailedSchemas.Select(pair =>
+                $"{pair.Key} => {GetFirstValidationLine(pair.Value.FirstOrDefault() ?? "Validation failed")}"));
+
+        return $"index {outputValidationSummary.Index}: {(outputValidationSummary.Passed ? "PASS" : "FAIL")}; " +
+               $"matched schemas: {FormatSchemaList(outputValidationSummary.MatchingSchemas)}; " +
+               $"non-matching schemas: {failedSchemasSummary}";
+    }
+
+    private static string BuildDetailedTraceForOutput(OutputValidationSummary outputValidationSummary)
+    {
+        var traceStringBuilder = new StringBuilder()
+            .Append($"\nJson output item at index {outputValidationSummary.Index} ")
+            .Append(outputValidationSummary.Passed ? "passed" : "failed")
+            .AppendLine(" validation.")
+            .Append("Matching schemas: ")
+            .AppendLine(FormatSchemaList(outputValidationSummary.MatchingSchemas));
+
+        if (outputValidationSummary.FailedSchemas.Count == 0)
+        {
+            traceStringBuilder.AppendLine(outputValidationSummary.Passed
+                ? "Schemas that did not match: none"
+                : "Schemas that did not match: no schemas were provided");
+            return traceStringBuilder.ToString();
+        }
+
+        traceStringBuilder.AppendLine("Schemas that did not match:");
+        foreach (var failedSchema in outputValidationSummary.FailedSchemas)
+        {
+            traceStringBuilder.AppendLine($" - Schema: {failedSchema.Key}, Validation Errors:");
+            foreach (var validationMessage in failedSchema.Value)
+                traceStringBuilder.AppendLine($" \t- {validationMessage}");
+        }
+
+        return traceStringBuilder.ToString();
+    }
+
+    private static string FormatSchemaList(IEnumerable<string> schemaNames)
+    {
+        var schemaNameList = schemaNames.ToList();
+        return schemaNameList.Count == 0 ? "none" : string.Join(", ", schemaNameList);
     }
 }

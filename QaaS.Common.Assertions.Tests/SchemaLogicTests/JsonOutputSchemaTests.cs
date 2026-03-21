@@ -300,4 +300,179 @@ public class JsonOutputSchemaTests
 
         Assert.That(result, Is.True);
     }
+
+    [Test]
+    public void TestSingleSessionAssert_WhenValidationFails_AssertionMessageShouldContainOutputIndexAndJsonPath()
+    {
+        // Arrange
+        const string outputName = "test";
+        var assertion = new ObjectOutputJsonSchema
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new ObjectOutputJsonSchemaConfiguration
+            {
+                OutputName = outputName
+            }
+        };
+
+        var sessionList = new List<SessionData>
+        {
+            new()
+            {
+                Outputs = new List<CommunicationData<object>>
+                {
+                    new()
+                    {
+                        Name = outputName,
+                        Data = new List<DetailedData<object>>
+                        {
+                            new() { Body = @"{""name"":""Alice""}" }
+                        }
+                    }
+                }
+            }
+        }.ToImmutableList();
+
+        var dataSources = new List<DataSource>
+        {
+            new()
+            {
+                Name = "schema",
+                Generator = new MockGenerator(new List<Data<object>>
+                {
+                    new() { Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema) }
+                })
+            }
+        }.ToImmutableList();
+
+        // Act
+        var result = assertion.Assert(sessionList, dataSources);
+
+        // Assert
+        Assert.That(result, Is.False);
+        Assert.That(assertion.AssertionMessage, Does.Contain("overall result ALL_FAIL"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("Total items: 1. Passed: 0. Failed: 1."));
+        Assert.That(assertion.AssertionMessage, Does.Contain("index 0"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("Json Path: '$'"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("schema - 0"));
+        Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 0 failed validation"));
+    }
+
+    [Test]
+    public void TestSingleSessionAssert_WhenAllValidationPasses_AssertionMessageShouldContainDetailedSummary()
+    {
+        // Arrange
+        const string outputName = "test";
+        var assertion = new ObjectOutputJsonSchema
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new ObjectOutputJsonSchemaConfiguration
+            {
+                OutputName = outputName
+            }
+        };
+
+        var sessionList = new List<SessionData>
+        {
+            new()
+            {
+                Outputs = new List<CommunicationData<object>>
+                {
+                    new()
+                    {
+                        Name = outputName,
+                        Data = new List<DetailedData<object>>
+                        {
+                            new() { Body = ComplexJson },
+                            new() { Body = ComplexJson }
+                        }
+                    }
+                }
+            }
+        }.ToImmutableList();
+
+        var dataSources = new List<DataSource>
+        {
+            new()
+            {
+                Name = "schema",
+                Generator = new MockGenerator(new List<Data<object>>
+                {
+                    new() { Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema) }
+                })
+            }
+        }.ToImmutableList();
+
+        // Act
+        var result = assertion.Assert(sessionList, dataSources);
+
+        // Assert
+        Assert.That(result, Is.True);
+        Assert.That(assertion.AssertionMessage, Does.Contain("overall result ALL_PASS"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("Total items: 2. Passed: 2. Failed: 0."));
+        Assert.That(assertion.AssertionMessage, Does.Contain("index 0: PASS"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("index 1: PASS"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("matched schemas: schema - 0"));
+        Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 0 passed validation"));
+        Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 1 passed validation"));
+    }
+
+    [Test]
+    public void TestSingleSessionAssert_WhenSomeValidationPasses_AssertionMessageShouldContainDetailedMixedSummary()
+    {
+        // Arrange
+        const string outputName = "test";
+        var assertion = new ObjectOutputJsonSchema
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new ObjectOutputJsonSchemaConfiguration
+            {
+                OutputName = outputName
+            }
+        };
+
+        var sessionList = new List<SessionData>
+        {
+            new()
+            {
+                Outputs = new List<CommunicationData<object>>
+                {
+                    new()
+                    {
+                        Name = outputName,
+                        Data = new List<DetailedData<object>>
+                        {
+                            new() { Body = ComplexJson },
+                            new() { Body = @"{""name"":""Alice""}" }
+                        }
+                    }
+                }
+            }
+        }.ToImmutableList();
+
+        var dataSources = new List<DataSource>
+        {
+            new()
+            {
+                Name = "schema",
+                Generator = new MockGenerator(new List<Data<object>>
+                {
+                    new() { Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema) }
+                })
+            }
+        }.ToImmutableList();
+
+        // Act
+        var result = assertion.Assert(sessionList, dataSources);
+
+        // Assert
+        Assert.That(result, Is.False);
+        Assert.That(assertion.AssertionMessage, Does.Contain("overall result PARTIAL_PASS"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("Total items: 2. Passed: 1. Failed: 1."));
+        Assert.That(assertion.AssertionMessage, Does.Contain("index 0: PASS"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("index 1: FAIL"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("Json Path: '$'"));
+        Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 0 passed validation"));
+        Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 1 failed validation"));
+    }
 }
