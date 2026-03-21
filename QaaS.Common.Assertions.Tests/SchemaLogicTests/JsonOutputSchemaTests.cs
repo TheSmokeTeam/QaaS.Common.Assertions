@@ -352,9 +352,10 @@ public class JsonOutputSchemaTests
         Assert.That(result, Is.False);
         Assert.That(assertion.AssertionMessage, Does.Contain("overall result ALL_FAIL"));
         Assert.That(assertion.AssertionMessage, Does.Contain("Total items: 1. Passed: 0. Failed: 1."));
-        Assert.That(assertion.AssertionMessage, Does.Contain("index 0"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("First failing item: index 0"));
         Assert.That(assertion.AssertionMessage, Does.Contain("Json Path: '$'"));
         Assert.That(assertion.AssertionMessage, Does.Contain("schema - 0"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("Detailed per-item results are available in AssertionTrace."));
         Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 0 failed validation"));
     }
 
@@ -398,7 +399,8 @@ public class JsonOutputSchemaTests
                 Name = "schema",
                 Generator = new MockGenerator(new List<Data<object>>
                 {
-                    new() { Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema) }
+                    new() { Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema) },
+                    new() { Body = Encoding.UTF8.GetBytes(InvalidJsonSchema) }
                 })
             }
         }.ToImmutableList();
@@ -410,11 +412,12 @@ public class JsonOutputSchemaTests
         Assert.That(result, Is.True);
         Assert.That(assertion.AssertionMessage, Does.Contain("overall result ALL_PASS"));
         Assert.That(assertion.AssertionMessage, Does.Contain("Total items: 2. Passed: 2. Failed: 0."));
-        Assert.That(assertion.AssertionMessage, Does.Contain("index 0: PASS"));
-        Assert.That(assertion.AssertionMessage, Does.Contain("index 1: PASS"));
-        Assert.That(assertion.AssertionMessage, Does.Contain("matched schemas: schema - 0"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("All output items matched at least one provided schema."));
+        Assert.That(assertion.AssertionMessage, Does.Contain("Detailed per-item results are available in AssertionTrace."));
+        Assert.That(assertion.AssertionMessage, Does.Not.Contain("Validation failed"));
         Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 0 passed validation"));
         Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 1 passed validation"));
+        Assert.That(assertion.AssertionTrace, Does.Contain("Schema: schema - 1, Validation Errors:"));
     }
 
     [Test]
@@ -469,9 +472,9 @@ public class JsonOutputSchemaTests
         Assert.That(result, Is.False);
         Assert.That(assertion.AssertionMessage, Does.Contain("overall result PARTIAL_PASS"));
         Assert.That(assertion.AssertionMessage, Does.Contain("Total items: 2. Passed: 1. Failed: 1."));
-        Assert.That(assertion.AssertionMessage, Does.Contain("index 0: PASS"));
-        Assert.That(assertion.AssertionMessage, Does.Contain("index 1: FAIL"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("First failing item: index 1"));
         Assert.That(assertion.AssertionMessage, Does.Contain("Json Path: '$'"));
+        Assert.That(assertion.AssertionMessage, Does.Contain("Detailed per-item results are available in AssertionTrace."));
         Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 0 passed validation"));
         Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 1 failed validation"));
     }

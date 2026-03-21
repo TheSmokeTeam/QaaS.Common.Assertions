@@ -120,14 +120,12 @@ public class ObjectOutputJsonSchema : BaseAssertion<ObjectOutputJsonSchemaConfig
             _ when validJsons == 0 => "ALL_FAIL",
             _ => "PARTIAL_PASS"
         };
-        var itemResults = outputValidationSummaries.Count == 0
-            ? "none"
-            : string.Join(" || ", outputValidationSummaries.Select(BuildOutputSummaryMessage));
         AssertionMessage =
             $"JSON schema validation summary for output {Configuration.OutputName!}: overall result {overallResult}. " +
             $"Total items: {totalOutputs}. Passed: {validJsons}. Failed: {invalidJsons}. " +
             $"Provided schemas ({jsonSchemas.Count}): {FormatSchemaList(jsonSchemas.Select(pair => pair.Key))}. " +
-            $"Item results: {itemResults}";
+            $"{BuildTopLevelFailureSummary(outputValidationSummaries.FirstOrDefault(summary => !summary.Passed))} " +
+            $"Detailed per-item results are available in AssertionTrace.";
         AssertionTrace = traceStringBuilder.ToString();
         return invalidJsons <= 0;
     }
@@ -184,18 +182,17 @@ public class ObjectOutputJsonSchema : BaseAssertion<ObjectOutputJsonSchemaConfig
         return string.IsNullOrWhiteSpace(path) ? "$" : path;
     }
 
-    private static string BuildOutputSummaryMessage(OutputValidationSummary outputValidationSummary)
+    private static string BuildTopLevelFailureSummary(OutputValidationSummary? firstFailedOutputValidationSummary)
     {
-        var failedSchemasSummary = outputValidationSummary.FailedSchemas.Count == 0
-            ? outputValidationSummary.Passed
-                ? "none"
-                : "no schemas were provided"
-            : string.Join(" | ", outputValidationSummary.FailedSchemas.Select(pair =>
-                $"{pair.Key} => {GetFirstValidationLine(pair.Value.FirstOrDefault() ?? "Validation failed")}"));
+        if (firstFailedOutputValidationSummary is null)
+            return "All output items matched at least one provided schema.";
 
-        return $"index {outputValidationSummary.Index}: {(outputValidationSummary.Passed ? "PASS" : "FAIL")}; " +
-               $"matched schemas: {FormatSchemaList(outputValidationSummary.MatchingSchemas)}; " +
-               $"non-matching schemas: {failedSchemasSummary}";
+        if (firstFailedOutputValidationSummary.FailedSchemas.Count == 0)
+            return $"First failing item: index {firstFailedOutputValidationSummary.Index}. Failure reason: no schemas were provided.";
+
+        var firstFailedSchema = firstFailedOutputValidationSummary.FailedSchemas.First();
+        return $"First failing item: index {firstFailedOutputValidationSummary.Index}. " +
+               $"Failure reason: {firstFailedSchema.Key} => {GetFirstValidationLine(firstFailedSchema.Value.FirstOrDefault() ?? "Validation failed")}.";
     }
 
     private static string BuildDetailedTraceForOutput(OutputValidationSummary outputValidationSummary)
