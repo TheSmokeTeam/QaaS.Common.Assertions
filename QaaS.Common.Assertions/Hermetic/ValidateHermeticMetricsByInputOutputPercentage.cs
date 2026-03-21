@@ -16,8 +16,12 @@ public class
 
     public override bool Assert(IImmutableList<SessionData> sessionDataList, IImmutableList<DataSource> dataSourceList)
     {
-        var inputCount = Configuration.InputNames!.Sum(input => sessionDataList.Sum(sessionData =>
-            sessionData.TryGetInputByName(input, out var data) ? data!.Data.Count : 0));
+        var inputCount = Configuration.InputNames!.Sum(input =>
+            Configuration.InputsAreOutputs
+                ? sessionDataList.Sum(sessionData =>
+                    sessionData.TryGetOutputByName(input, out var data) ? data!.Data.Count : 0)
+                : sessionDataList.Sum(sessionData =>
+                    sessionData.TryGetInputByName(input, out var data) ? data!.Data.Count : 0));
         var outputCount = Configuration.OutputNames!.Sum(output => sessionDataList.Sum(sessionData =>
             sessionData.TryGetOutputByName(output, out var data) ? data!.Data.Count : 0));
 

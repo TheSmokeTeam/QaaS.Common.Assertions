@@ -431,4 +431,65 @@ public class DelayByChunksTests
         Assert.That(result, Is.False);
         StringAssert.Contains("Expected 1 output chunks", assertion.AssertionMessage!);
     }
+
+    [Test]
+    public void TestAssertSingleSession_CallFunctionWithInputsAreOutputs_ShouldUseConfiguredOutputAsInputSource()
+    {
+        const string inputAsOutputName = "inputAsOutput";
+        const string outputName = "result";
+        var session = new SessionData
+        {
+            Name = "Id",
+            Outputs = new List<CommunicationData<object>>
+            {
+                new()
+                {
+                    Name = inputAsOutputName,
+                    Data = new List<DetailedData<object>>
+                    {
+                        new() { Body = null, Timestamp = new DateTime(10_000) },
+                        new() { Body = null, Timestamp = new DateTime(20_000) },
+                        new() { Body = null, Timestamp = new DateTime(30_000) },
+                        new() { Body = null, Timestamp = new DateTime(40_000) }
+                    }
+                },
+                new()
+                {
+                    Name = outputName,
+                    Data = new List<DetailedData<object>>
+                    {
+                        new() { Body = null, Timestamp = new DateTime(20_000) },
+                        new() { Body = null, Timestamp = new DateTime(40_000) }
+                    }
+                }
+            }
+        };
+        var assertion = new DelayByChunks
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new DelayByChunksConfiguration
+            {
+                Input = new Chunk
+                {
+                    Name = inputAsOutputName,
+                    ChunkSize = 2,
+                    ChunkTimeOption = ChunkTimeOption.Last
+                },
+                InputsAreOutputs = true,
+                Output = new Chunk
+                {
+                    Name = outputName,
+                    ChunkSize = 1,
+                    ChunkTimeOption = ChunkTimeOption.Last
+                },
+                MaximumDelayMs = 0,
+                MaximumNegativeDelayBufferMs = 0
+            }
+        };
+
+        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.True);
+        StringAssert.Contains("Expected 2 output chunks", assertion.AssertionMessage!);
+    }
 }

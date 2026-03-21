@@ -19,6 +19,10 @@ public record ValidateHermeticMetricsByInputOutputPercentageConfig()
     [Required, MinLength(1),
      Description("The names of the inputs the sum of outputs should be a given percentage of the sum of")]
     public string[]? InputNames { get; set; }
+
+    [Description($"Whether the given inputs in {nameof(InputNames)} are actually another outputs list"),
+     DefaultValue(false)]
+    public bool InputsAreOutputs { get; set; } = false;
     
     [Required, Description("The name of the output to take the metrics from")]
     public string? MetricOutputSourceName { get; set; }

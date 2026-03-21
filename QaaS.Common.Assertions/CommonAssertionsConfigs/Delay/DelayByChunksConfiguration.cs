@@ -18,6 +18,11 @@ public record DelayByChunksConfiguration
     public Chunk? Output { get; set; }
     [Required, Description("The information about the input required for the assertion")]
     public Chunk? Input { get; set; }
+
+    [Description($"Whether the given input in {nameof(Input)} is actually another outputs list"),
+     DefaultValue(false)]
+    public bool InputsAreOutputs { get; set; } = false;
+
     [Required, Range(0, long.MaxValue), Description(
          "maximum delay in milliseconds allowed for a chunk's delay for the chunk to be considered as arrived on time")]
     public long? MaximumDelayMs { get; set; }
