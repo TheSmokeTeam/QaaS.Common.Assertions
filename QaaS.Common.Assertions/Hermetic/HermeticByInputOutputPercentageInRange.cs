@@ -7,6 +7,9 @@ using QaaS.Framework.SDK.Session.SessionDataObjects;
 
 namespace QaaS.Common.Assertions.Hermetic;
 
+/// <summary>
+/// Checks whether the percentage between configured inputs and outputs stays within the expected minimum and maximum range.
+/// </summary>
 public class HermeticByInputOutputPercentageInRange : BaseAssertion<HermeticByInputOutputPercentageInRangeConfiguration>
 {
     /// <inheritdoc />
