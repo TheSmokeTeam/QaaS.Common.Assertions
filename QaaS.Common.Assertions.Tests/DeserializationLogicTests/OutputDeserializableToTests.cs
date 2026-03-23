@@ -45,8 +45,7 @@ public class OutputDeserializableToTests
             OutputName = outputName,
             Deserialize = new DeserializeConfig
             {
-                Deserializer = SerializationType.Json,
-                SpecificType = null
+                Deserializer = SerializationType.Json
             }
         };
         var session = new SessionData
