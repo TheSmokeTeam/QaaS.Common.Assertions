@@ -9,6 +9,9 @@ using QaaS.Framework.SDK.Session.SessionDataObjects;
 
 namespace QaaS.Common.Assertions.Hermetic;
 
+/// <summary>
+/// Compares the hermetic percentage calculated from configured inputs and outputs with the hermetic percentage reported by the metrics output.
+/// </summary>
 public class
     ValidateHermeticMetricsByInputOutputPercentage : BaseAssertion<ValidateHermeticMetricsByInputOutputPercentageConfig>
 {

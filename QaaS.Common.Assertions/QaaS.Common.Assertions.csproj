@@ -23,9 +23,9 @@
     <PackageReference Include="JsonSchema.Net" Version="9.1.3" />
         <PackageReference Include="morelinq" Version="4.4.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="QaaS.Framework.Configurations" Version="1.2.5" />
-    <PackageReference Include="QaaS.Framework.SDK" Version="1.2.5" />
-    <PackageReference Include="QaaS.Framework.Serialization" Version="1.2.5" />
+    <PackageReference Include="QaaS.Framework.Configurations" Version="1.2.8" />
+    <PackageReference Include="QaaS.Framework.SDK" Version="1.2.8" />
+    <PackageReference Include="QaaS.Framework.Serialization" Version="1.2.8" />
     </ItemGroup>
 
     <ItemGroup>
