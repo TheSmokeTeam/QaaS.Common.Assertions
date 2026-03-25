@@ -4,6 +4,7 @@ This file is generated automatically from CI from git history.
 
 ## Unreleased
 
+- chore(ci): record clean build verification
 - chore(deps): bump framework packages
 - docs(assertions): add hook XML summaries
 - docs(changelog): add automated changelog
