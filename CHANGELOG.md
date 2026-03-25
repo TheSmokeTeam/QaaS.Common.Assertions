@@ -4,12 +4,20 @@ This file is generated automatically from CI from git history.
 
 ## Unreleased
 
+- chore(ci): record clean build verification
 - chore(deps): bump framework packages
 - docs(assertions): add hook XML summaries
 - docs(changelog): add automated changelog
 
 ## 3.1.3-alpha.1 - 2026-03-22
 
+- No changes recorded.
+
+## 3.1.3 - 2026-03-23
+
+- chore(deps): bump framework packages
+- docs(assertions): add hook XML summaries
+- docs(changelog): add automated changelog
 - chore: consume framework 1.2.5-alpha.4
 
 ## 3.1.2 - 2026-03-21
