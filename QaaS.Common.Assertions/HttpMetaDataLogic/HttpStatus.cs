@@ -10,7 +10,7 @@ namespace QaaS.Common.Assertions.HttpMetaDataLogic;
 /// <summary>
 /// Performs a logic test on the http status of all selected outputs in a session by checking they all have the desired http status code
 /// </summary>
-/// <qaas-docs group="Transport metadata" subgroup="HTTP status" />
+/// <qaas-docs group="Content validation" subgroup="HTTP status" />
 public class HttpStatus: BaseAssertion<HttpStatusConfiguration>
 {
     /// <inheritdoc />
