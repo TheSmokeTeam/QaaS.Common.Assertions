@@ -10,6 +10,7 @@ namespace QaaS.Common.Assertions.Hermetic;
 /// <summary>
 /// Performs a hermetic test by comparing the count of a given output in a session to a given expected count
 /// </summary>
+/// <qaas-docs group="Hermeticity" subgroup="Exact output count" />
 public class HermeticByExpectedOutputCount : BaseAssertion<HermeticByExpectedOutputCountConfiguration>
 {
     /// <inheritdoc />

@@ -12,6 +12,7 @@ namespace QaaS.Common.Assertions.Hermetic;
 /// <summary>
 /// Compares the hermetic percentage calculated from configured inputs and outputs with the hermetic percentage reported by the metrics output.
 /// </summary>
+/// <qaas-docs group="Hermeticity" subgroup="Metrics percentage validation" />
 public class
     ValidateHermeticMetricsByInputOutputPercentage : BaseAssertion<ValidateHermeticMetricsByInputOutputPercentageConfig>
 {

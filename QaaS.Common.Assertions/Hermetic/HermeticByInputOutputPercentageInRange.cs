@@ -10,6 +10,7 @@ namespace QaaS.Common.Assertions.Hermetic;
 /// <summary>
 /// Checks whether the percentage between configured inputs and outputs stays within the expected minimum and maximum range.
 /// </summary>
+/// <qaas-docs group="Hermeticity" subgroup="Input/output percentage range" />
 public class HermeticByInputOutputPercentageInRange : BaseAssertion<HermeticByInputOutputPercentageInRangeConfiguration>
 {
     /// <inheritdoc />
