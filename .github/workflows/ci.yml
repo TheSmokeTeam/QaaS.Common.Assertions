@@ -7,6 +7,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   pull-requests: read
@@ -361,7 +365,7 @@ jobs:
           foreach ($package in $packages) {
             # Only push the main QaaS.Common.Assertions package, not QaaS.Common.Assertions.* (e.g., QaaS.Common.Assertions.Tests)
             if ($package.Name -match "^QaaS\.Common\.Assertions\.[0-9]") {
-              dotnet nuget push $package.FullName -k ${{ secrets.NUGET_AUTH_TOKEN }} -s https://api.nuget.org/v3/index.json
+            dotnet nuget push $package.FullName -k ${{ secrets.NUGET_AUTH_TOKEN }} -s https://api.nuget.org/v3/index.json --skip-duplicate
             }
           }
 
