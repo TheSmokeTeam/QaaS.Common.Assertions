@@ -17,6 +17,7 @@ namespace QaaS.Common.Assertions.Delay;
 /// subtracting the timestamp of input chunks of a configured size from a timestamp of output
 /// chunks of a configured size, takes the chunks in ascending order of the input/output lists.
 /// </summary>
+/// <qaas-docs group="Latency" subgroup="Chunk latency" />
 public class DelayByChunks: BaseAssertion<DelayByChunksConfiguration>
 {
     private const string DateTimeLogFormat = "yyyy-MM-dd HH:mm:ss.fff";

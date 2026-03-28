@@ -13,6 +13,7 @@ namespace QaaS.Common.Assertions.DeserializationLogic;
 /// Performs a logic test that checks if the items of a configured output can all be deserialized using a configured
 /// deserializer
 /// </summary>
+/// <qaas-docs group="Contract validation" subgroup="Deserialization validation" />
 public class OutputDeserializableTo: BaseAssertion<OutputDeserializableToConfiguration>
 {
    

@@ -16,6 +16,7 @@ namespace QaaS.Common.Assertions.Delay;
 /// Checks for delay between an input source to an output source by
 /// subtracting the average timestamp of all inputs from the average timestamp of all the outputs.
 /// </summary>
+/// <qaas-docs group="Latency" subgroup="Average latency" />
 public class DelayByAverage: BaseAssertion<DelayByAverageConfiguration>
 {
     private const string DateTimeLogFormat = "yyyy-MM-dd HH:mm:ss.fff";

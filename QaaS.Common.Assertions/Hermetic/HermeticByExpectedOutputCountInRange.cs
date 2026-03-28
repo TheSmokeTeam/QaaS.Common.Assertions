@@ -10,6 +10,7 @@ namespace QaaS.Common.Assertions.Hermetic;
 /// <summary>
 /// Performs a hermetic test by comparing the count of a given output in a session to a given expected minimum and maximum
 /// </summary>
+/// <qaas-docs group="Hermeticity" subgroup="Output count range" />
 public class HermeticByExpectedOutputCountInRange : BaseAssertion<HermeticByExpectedOutputCountInRangeConfiguration>
 {
     /// <inheritdoc />

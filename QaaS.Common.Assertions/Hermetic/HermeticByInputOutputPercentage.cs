@@ -11,6 +11,7 @@ namespace QaaS.Common.Assertions.Hermetic;
 /// Performs a hermetic test by comparing the the count of a specified input with multiplied by given percentage modifier
 /// to the count of a specified output
 /// </summary>
+/// <qaas-docs group="Hermeticity" subgroup="Exact input/output percentage" />
 public class HermeticByInputOutputPercentage: BaseAssertion<HermeticByInputOutputPercentageConfiguration>
 {
     /// <inheritdoc />

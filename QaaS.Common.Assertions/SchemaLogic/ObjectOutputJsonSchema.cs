@@ -14,6 +14,7 @@ namespace QaaS.Common.Assertions.SchemaLogic;
 /// <summary>
 /// Validates that each configured output item matches at least one JSON schema provided by the configured data sources.
 /// </summary>
+/// <qaas-docs group="Contract validation" subgroup="JSON schema validation" />
 public class ObjectOutputJsonSchema : BaseAssertion<ObjectOutputJsonSchemaConfiguration>
 {
     private sealed record OutputValidationSummary(
