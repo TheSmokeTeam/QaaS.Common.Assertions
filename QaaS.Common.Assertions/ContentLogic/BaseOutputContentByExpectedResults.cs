@@ -6,17 +6,19 @@ using QaaS.Common.Assertions.ContentLogic.ExpectedResultsHandler;
 using QaaS.Common.Assertions.ContentLogic.FieldValidation.ValidatorFactory;
 using QaaS.Common.Assertions.ContentLogic.JsonConversion.ConverterFactory;
 using QaaS.Common.Assertions.ContentLogic.JsonExtensions;
-using QaaS.Framework.SDK.Extensions;
 using QaaS.Framework.SDK.DataSourceObjects;
+using QaaS.Framework.SDK.Extensions;
 using QaaS.Framework.SDK.Hooks.Assertion;
 using QaaS.Framework.SDK.Session.DataObjects;
 using QaaS.Framework.SDK.Session.SessionDataObjects;
+
 namespace QaaS.Common.Assertions.ContentLogic;
 
 public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertion<TConfig>
     where TConfig : OutputContentByExpectedResultsConfiguration, new()
 {
-    private IList<Dictionary<string, object?>> _expectedResults { get; set; } = new List<Dictionary<string, object?>>();
+    private IList<Dictionary<string, object?>> _expectedResults { get; set; } =
+        new List<Dictionary<string, object?>>();
 
     /// <summary>
     /// Gets an instance of IResultsHandler
@@ -28,11 +30,14 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
     /// Gets an instance of IFieldValidatorFactory
     /// </summary>
     /// <returns>A new instance of IFieldValidatorFactory</returns>
-    protected virtual IFieldValidatorFactory BuildFieldValidatorFactory() => new FieldValidatorFactory();
+    protected virtual IFieldValidatorFactory BuildFieldValidatorFactory() =>
+        new FieldValidatorFactory();
 
     /// <inheritdoc />
-    public override bool Assert(IImmutableList<SessionData> sessionDataList,
-        IImmutableList<DataSource> dataSourceList)
+    public override bool Assert(
+        IImmutableList<SessionData> sessionDataList,
+        IImmutableList<DataSource> dataSourceList
+    )
     {
         // Get the expected results
         LoadResultsContent(dataSourceList);
@@ -43,8 +48,8 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
         if (outputs.Count != _expectedResults.Count)
         {
             AssertionMessage =
-                $"The amount of expected results and the amount of outputs from {Configuration.OutputName} did not match. " +
-                $"\nGot {_expectedResults.Count} expected results and {outputs.Count} outputs.";
+                $"The amount of expected results and the amount of outputs from {Configuration.OutputName} did not match. "
+                + $"\nGot {_expectedResults.Count} expected results and {outputs.Count} outputs.";
             return false;
         }
 
@@ -53,22 +58,35 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
             // Validate that the columns' names in the configured mapping exists in the result items
             if (!ValidateFieldsMapping(out var columnsNotFound))
                 throw new ArgumentException(
-                    $"The columns: {string.Join(", ", columnsNotFound)} were not found in the provided results item {Configuration.ResultsMetaDataStorageKey ?? ""}");
+                    $"The columns: {string.Join(", ", columnsNotFound)} were not found in the provided results item {Configuration.ResultsMetaDataStorageKey ?? ""}"
+                );
         }
 
         // Validate all output items
         var fieldValidationFactory = BuildFieldValidatorFactory();
-        var jsonConverter = new JsonConverterFactory().BuildJsonConverter(Configuration.JsonConverterType);
-        int outputIndex = 0, invalidItems = 0, emptyItems = 0;
+        var jsonConverter = new JsonConverterFactory().BuildJsonConverter(
+            Configuration.JsonConverterType
+        );
+        int outputIndex = 0,
+            invalidItems = 0,
+            emptyItems = 0;
         var traceStringBuilder = new StringBuilder();
-        var unmatchedExpectedResults = Configuration.CompareRowsNotInOrder ? _expectedResults.ToList() : null;
+        var unmatchedExpectedResults = Configuration.CompareRowsNotInOrder
+            ? _expectedResults.ToList()
+            : null;
         var matchedExpectedResults = Configuration.CompareRowsNotInOrder
-            ? TryFindOutputAssignments(outputs
+            ? TryFindOutputAssignments(
+                outputs
                     .Select((output, index) => new { Output = output, Index = index })
                     .Where(item => item.Output.Body != null)
-                    .Select(item => new OutputWithIndex(item.Index, jsonConverter.Convert(item.Output.Body!)))
+                    .Select(item => new OutputWithIndex(
+                        item.Index,
+                        jsonConverter.Convert(item.Output.Body!)
+                    ))
                     .ToList(),
-                unmatchedExpectedResults!, fieldValidationFactory)
+                unmatchedExpectedResults!,
+                fieldValidationFactory
+            )
             : null;
 
         foreach (var output in outputs)
@@ -77,7 +95,8 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
             if (output.Body == null)
             {
                 traceStringBuilder.Append(
-                    $"- Item in index {currentOutputIndex} from output {Configuration.OutputName} is empty.\n");
+                    $"- Item in index {currentOutputIndex} from output {Configuration.OutputName} is empty.\n"
+                );
                 emptyItems++;
                 continue;
             }
@@ -88,18 +107,34 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
             if (!Configuration.CompareRowsNotInOrder)
             {
                 matchingExpectedResult = _expectedResults[currentOutputIndex];
-                if (!CheckIsOutputValid(body, matchingExpectedResult, fieldValidationFactory, out invalidFields))
+                if (
+                    !CheckIsOutputValid(
+                        body,
+                        matchingExpectedResult,
+                        fieldValidationFactory,
+                        out invalidFields
+                    )
+                )
                     matchingExpectedResult = null;
             }
-            else if (matchedExpectedResults != null &&
-                matchedExpectedResults.TryGetValue(currentOutputIndex, out var globallyMatchedExpectedResult))
+            else if (
+                matchedExpectedResults != null
+                && matchedExpectedResults.TryGetValue(
+                    currentOutputIndex,
+                    out var globallyMatchedExpectedResult
+                )
+            )
             {
                 matchingExpectedResult = globallyMatchedExpectedResult;
             }
             else
             {
-                matchingExpectedResult = FindMatchingExpectedResult(body, unmatchedExpectedResults!, fieldValidationFactory,
-                    out invalidFields);
+                matchingExpectedResult = FindMatchingExpectedResult(
+                    body,
+                    unmatchedExpectedResults!,
+                    fieldValidationFactory,
+                    out invalidFields
+                );
             }
 
             if (matchingExpectedResult != null)
@@ -109,15 +144,18 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
             }
 
             traceStringBuilder.Append(
-                $"- Item in index {currentOutputIndex} from output {Configuration.OutputName} did not match any expected result. " +
-                $"Invalid fields: {string.Join(", ", invalidFields)}).\n");
+                $"- Item in index {currentOutputIndex} from output {Configuration.OutputName} did not match any expected result. "
+                    + $"Invalid fields: {string.Join(", ", invalidFields)}).\n"
+            );
             invalidItems++;
         }
 
         // Assert
         var didPass = emptyItems == 0 && invalidItems == 0;
         var successPercentage =
-            outputs.Count == 0 ? 0 : (outputs.Count - emptyItems - invalidItems) * 100 / outputs.Count;
+            outputs.Count == 0
+                ? 0
+                : (outputs.Count - emptyItems - invalidItems) * 100 / outputs.Count;
         AssertionMessage = didPass
             ? $"{successPercentage}% match: All output ({outputs.Count} items) from {Configuration.OutputName!} matched the expected results, supplied by {Configuration.ResultsMetaDataStorageKey}"
             : $"{successPercentage}% match: {invalidItems + emptyItems} output items (out of {outputs.Count}) from {Configuration.OutputName!} did not match the expected results, supplied by {Configuration.ResultsMetaDataStorageKey}.\n{emptyItems} empty items, {invalidItems} invalid items.";
@@ -149,7 +187,8 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
     {
         if (dataSources.Count == 0)
             throw new ArgumentException(
-                $"No DataSource was provided for the assertion, as it uses a results data source item for validating the received output");
+                $"No DataSource was provided for the assertion, as it uses a results data source item for validating the received output"
+            );
         return Configuration.DataSourceName == null
             ? dataSources.AsSingle()
             : dataSources.GetDataSourceByName(Configuration.DataSourceName);
@@ -161,17 +200,22 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
     /// </summary>
     /// <param name="dataItems">Data items of a data source</param>
     /// <returns>The data item that matches the FileName if supplied. The first data item otherwise</returns>
-    private IEnumerable<Data<object>> GetResultsContentFromDataSource(IEnumerable<Data<object>> dataItems)
+    private IEnumerable<Data<object>> GetResultsContentFromDataSource(
+        IEnumerable<Data<object>> dataItems
+    )
     {
         if (Configuration.ResultsMetaDataStorageKey == null)
             return dataItems;
         var filteredDataItems = dataItems
-            .Where(dataItem => dataItem.MetaData?.Storage?.Key == Configuration.ResultsMetaDataStorageKey)
+            .Where(dataItem =>
+                dataItem.MetaData?.Storage?.Key == Configuration.ResultsMetaDataStorageKey
+            )
             .ToList();
         if (!filteredDataItems.Any())
             throw new ArgumentException(
                 $"The provided key of the storage metadata that contains the results {Configuration.ResultsMetaDataStorageKey} does not exist in the DataSource list",
-                Configuration.ResultsMetaDataStorageKey);
+                Configuration.ResultsMetaDataStorageKey
+            );
         return filteredDataItems;
     }
 
@@ -182,8 +226,11 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
     /// <returns>True if all column in the mapping appear in th results file</returns>
     private bool ValidateFieldsMapping(out IList<string> columnsNotFound)
     {
-        columnsNotFound = Configuration.ColumnNameToFieldPathMap!.Keys
-            .Where(column => !_expectedResults[0].ContainsKey(column)).ToList();
+        columnsNotFound = Configuration
+            .ColumnNameToFieldPathMap!.Keys.Where(column =>
+                !_expectedResults[0].ContainsKey(column)
+            )
+            .ToList();
         return columnsNotFound.Count == 0;
     }
 
@@ -195,17 +242,25 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
     /// <param name="fieldValidationFactory">Field validation factory</param>
     /// <param name="invalidOutputFields">All the fields that were not valid</param>
     /// <returns>True if all fields are valid according to the expected result</returns>
-    private bool CheckIsOutputValid(JsonNode output, IDictionary<string, object?> expectedResults,
-        IFieldValidatorFactory fieldValidationFactory, out IList<string> invalidOutputFields)
+    private bool CheckIsOutputValid(
+        JsonNode output,
+        IDictionary<string, object?> expectedResults,
+        IFieldValidatorFactory fieldValidationFactory,
+        out IList<string> invalidOutputFields
+    )
     {
         invalidOutputFields = new List<string>();
         foreach (var fieldConfiguration in Configuration.ColumnNameToFieldPathMap!)
         {
-            var valueInOutput =
-                output.GetFieldValueByPath(fieldConfiguration.Value.Path ?? $"$.{fieldConfiguration.Key}");
+            var valueInOutput = output.GetFieldValueByPath(
+                fieldConfiguration.Value.Path ?? $"$.{fieldConfiguration.Key}"
+            );
             var expectedOutput = expectedResults[fieldConfiguration.Key];
-            if (!fieldValidationFactory.GetFieldValidator(fieldConfiguration.Value.FieldValidationConfig!)
-                    .Validate(valueInOutput, expectedOutput))
+            if (
+                !fieldValidationFactory
+                    .GetFieldValidator(fieldConfiguration.Value.FieldValidationConfig!)
+                    .Validate(valueInOutput, expectedOutput)
+            )
                 invalidOutputFields.Add(fieldConfiguration.Key);
         }
 
@@ -213,24 +268,40 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
     }
 
     private Dictionary<int, Dictionary<string, object?>>? TryFindOutputAssignments(
-        IReadOnlyList<OutputWithIndex> outputs, IList<Dictionary<string, object?>> expectedResults,
-        IFieldValidatorFactory fieldValidationFactory)
+        IReadOnlyList<OutputWithIndex> outputs,
+        IList<Dictionary<string, object?>> expectedResults,
+        IFieldValidatorFactory fieldValidationFactory
+    )
     {
         var assignedExpectedResults = new Dictionary<int, Dictionary<string, object?>>();
-        return TryFindOutputAssignments(outputs, 0, expectedResults, fieldValidationFactory, assignedExpectedResults)
+        return TryFindOutputAssignments(
+            outputs,
+            0,
+            expectedResults,
+            fieldValidationFactory,
+            assignedExpectedResults
+        )
             ? assignedExpectedResults
             : null;
     }
 
-    private bool TryFindOutputAssignments(IReadOnlyList<OutputWithIndex> outputs, int outputPosition,
-        IList<Dictionary<string, object?>> expectedResults, IFieldValidatorFactory fieldValidationFactory,
-        Dictionary<int, Dictionary<string, object?>> assignedExpectedResults)
+    private bool TryFindOutputAssignments(
+        IReadOnlyList<OutputWithIndex> outputs,
+        int outputPosition,
+        IList<Dictionary<string, object?>> expectedResults,
+        IFieldValidatorFactory fieldValidationFactory,
+        Dictionary<int, Dictionary<string, object?>> assignedExpectedResults
+    )
     {
         if (outputPosition == outputs.Count)
             return true;
 
         var output = outputs[outputPosition];
-        for (var expectedResultIndex = 0; expectedResultIndex < expectedResults.Count; expectedResultIndex++)
+        for (
+            var expectedResultIndex = 0;
+            expectedResultIndex < expectedResults.Count;
+            expectedResultIndex++
+        )
         {
             var expectedResult = expectedResults[expectedResultIndex];
             if (!CheckIsOutputValid(output.Body, expectedResult, fieldValidationFactory, out _))
@@ -238,8 +309,15 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
 
             assignedExpectedResults[output.Index] = expectedResult;
             expectedResults.RemoveAt(expectedResultIndex);
-            if (TryFindOutputAssignments(outputs, outputPosition + 1, expectedResults, fieldValidationFactory,
-                    assignedExpectedResults))
+            if (
+                TryFindOutputAssignments(
+                    outputs,
+                    outputPosition + 1,
+                    expectedResults,
+                    fieldValidationFactory,
+                    assignedExpectedResults
+                )
+            )
                 return true;
 
             expectedResults.Insert(expectedResultIndex, expectedResult);
@@ -249,14 +327,24 @@ public abstract class BaseOutputContentByExpectedResults<TConfig> : BaseAssertio
         return false;
     }
 
-    private Dictionary<string, object?>? FindMatchingExpectedResult(JsonNode output,
-        IEnumerable<Dictionary<string, object?>> expectedResults, IFieldValidatorFactory fieldValidationFactory,
-        out IList<string> invalidOutputFields)
+    private Dictionary<string, object?>? FindMatchingExpectedResult(
+        JsonNode output,
+        IEnumerable<Dictionary<string, object?>> expectedResults,
+        IFieldValidatorFactory fieldValidationFactory,
+        out IList<string> invalidOutputFields
+    )
     {
         invalidOutputFields = [];
         foreach (var expectedResult in expectedResults)
         {
-            if (CheckIsOutputValid(output, expectedResult, fieldValidationFactory, out var candidateInvalidFields))
+            if (
+                CheckIsOutputValid(
+                    output,
+                    expectedResult,
+                    fieldValidationFactory,
+                    out var candidateInvalidFields
+                )
+            )
                 return expectedResult;
 
             if (candidateInvalidFields.Count > invalidOutputFields.Count)

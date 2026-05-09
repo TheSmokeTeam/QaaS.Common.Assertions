@@ -9,13 +9,18 @@ namespace QaaS.Common.Assertions.Tests.ContentLogicTests.ContentLogicTestsUtils;
 /// Created to help in the testing of that assertion.
 /// </summary>
 /// <typeparam name="TConfig"> The type of the configuration that the assertion needs to have </typeparam>
-internal static class ReflectionUtils<TConfig> where TConfig : OutputContentByExpectedResultsConfiguration, new()
+internal static class ReflectionUtils<TConfig>
+    where TConfig : OutputContentByExpectedResultsConfiguration, new()
 {
     public static PropertyInfo GetPropertyInfo(string propertyName) =>
-        typeof(BaseOutputContentByExpectedResults<TConfig>).GetProperty(propertyName,
-            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)!;
-    
+        typeof(BaseOutputContentByExpectedResults<TConfig>).GetProperty(
+            propertyName,
+            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
+        )!;
+
     public static MethodInfo GetMethodInfo(string methodName) =>
-        typeof(BaseOutputContentByExpectedResults<TConfig>).GetMethod(methodName,
-            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)!;
+        typeof(BaseOutputContentByExpectedResults<TConfig>).GetMethod(
+            methodName,
+            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
+        )!;
 }

@@ -5,7 +5,6 @@ using NUnit.Framework;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.ContentLogic;
 using QaaS.Common.Assertions.ContentLogic.JsonConversion.ConverterFactory;
 
-
 namespace QaaS.Common.Assertions.Tests.ContentLogicTests.JsonConverterTests;
 
 [TestFixture]
@@ -17,11 +16,9 @@ public class JsonConverterTests
         { "age", "20" },
         { "gender", "female" },
         {
-            "address", new JsonObject()
-            {
-                { "city", "Boston" }
-            }
-        }
+            "address",
+            new JsonObject() { { "city", "Boston" } }
+        },
     };
 
     private record YamlObject
@@ -41,21 +38,29 @@ public class JsonConverterTests
 
     private static IEnumerable<TestCaseData> _convertableObjectsAndConverters = new[]
     {
-        new TestCaseData(Json, JsonConverterType.Json, Json.DeepClone())
-            .SetName("Json"),
+        new TestCaseData(Json, JsonConverterType.Json, Json.DeepClone()).SetName("Json"),
         new TestCaseData(
-                new XElement("map",
-                    new XElement("name", "Alice"),
-                    new XElement("age", "20"),
-                    new XElement("gender", "female"),
-                    new XElement("address",
-                        new XElement("city", "Boston"))
-                ), JsonConverterType.Xml, new JsonObject { { "map", Json.DeepClone() } })
-            .SetName("Xml"),
-        new TestCaseData(new YamlObject
-                    { name = "Alice", age = "20", gender = "female", address = new Address { city = "Boston" } },
-                JsonConverterType.Object, Json.DeepClone())
-            .SetName("Yaml"),
+            new XElement(
+                "map",
+                new XElement("name", "Alice"),
+                new XElement("age", "20"),
+                new XElement("gender", "female"),
+                new XElement("address", new XElement("city", "Boston"))
+            ),
+            JsonConverterType.Xml,
+            new JsonObject { { "map", Json.DeepClone() } }
+        ).SetName("Xml"),
+        new TestCaseData(
+            new YamlObject
+            {
+                name = "Alice",
+                age = "20",
+                gender = "female",
+                address = new Address { city = "Boston" },
+            },
+            JsonConverterType.Object,
+            Json.DeepClone()
+        ).SetName("Yaml"),
     };
 
     private static readonly JsonConverterFactory Factory = new();

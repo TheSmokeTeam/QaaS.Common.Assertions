@@ -10,12 +10,22 @@ public class FieldValidatorFactory : IFieldValidatorFactory
     {
         return validationConfig.Type switch
         {
-            FieldValidationType.ExactValue => new ExactValueFieldValidator<ExactValueFieldValidatorConfig>(validationConfig.ExactValue),
-            FieldValidationType.ExactOverrideValue => new ExactOverrideValueFieldValidator(validationConfig.ExactOverrideValue!),
-            FieldValidationType.Base64ToHex => new Base64ToHexFieldValidator(validationConfig.Base64ToHex!),
-            FieldValidationType.ErrorRange =>
-                new ErrorRangeFieldValidator(validationConfig.ErrorRange!),
-            _ => throw new NotSupportedException($"Field validation of type {validationConfig.Type} is not supported"),
+            FieldValidationType.ExactValue =>
+                new ExactValueFieldValidator<ExactValueFieldValidatorConfig>(
+                    validationConfig.ExactValue
+                ),
+            FieldValidationType.ExactOverrideValue => new ExactOverrideValueFieldValidator(
+                validationConfig.ExactOverrideValue!
+            ),
+            FieldValidationType.Base64ToHex => new Base64ToHexFieldValidator(
+                validationConfig.Base64ToHex!
+            ),
+            FieldValidationType.ErrorRange => new ErrorRangeFieldValidator(
+                validationConfig.ErrorRange!
+            ),
+            _ => throw new NotSupportedException(
+                $"Field validation of type {validationConfig.Type} is not supported"
+            ),
         };
     }
 }

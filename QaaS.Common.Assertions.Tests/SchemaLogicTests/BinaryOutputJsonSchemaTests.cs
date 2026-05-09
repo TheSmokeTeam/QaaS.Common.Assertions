@@ -9,9 +9,10 @@ namespace QaaS.Common.Assertions.Tests.SchemaLogicTests;
 [TestFixture]
 public class BinaryOutputJsonSchemaTests
 {
-    private static readonly MethodInfo DeserializeMethod =
-        typeof(ObjectOutputJsonSchema).GetMethod("DeserializeOutputToJson", 
-            BindingFlags.Static | BindingFlags.NonPublic)!;
+    private static readonly MethodInfo DeserializeMethod = typeof(ObjectOutputJsonSchema).GetMethod(
+        "DeserializeOutputToJson",
+        BindingFlags.Static | BindingFlags.NonPublic
+    )!;
 
     [Test]
     public void TestDeserializeOutputToJsonWithType_CallFunctionWithMessagePack_ShouldConvertMessagePackToCorrectJson()
@@ -21,14 +22,13 @@ public class BinaryOutputJsonSchemaTests
         {
             IntegerProperty = 1,
             StringProperty = "SampleText",
-            DoubleProperty = 1.2
+            DoubleProperty = 1.2,
         };
         var assertion = new ObjectOutputJsonSchema();
-        
+
         // Act
-        var json = (JsonNode?)DeserializeMethod.Invoke(assertion, 
-            new object?[]{testObject});
-        
+        var json = (JsonNode?)DeserializeMethod.Invoke(assertion, new object?[] { testObject });
+
         // Assert
         Assert.AreEqual(3, json?.AsObject().Count);
         Assert.AreEqual(testObject.IntegerProperty, json?["IntegerProperty"]?.GetValue<int>());

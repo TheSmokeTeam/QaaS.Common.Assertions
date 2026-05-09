@@ -1,7 +1,8 @@
 ﻿namespace QaaS.Common.Assertions.ContentLogic.FieldValidation.Validators;
 
-public abstract class BaseFieldValidator<TValidationConfiguration>
-    (TValidationConfiguration validationConfig) : IFieldValidator 
+public abstract class BaseFieldValidator<TValidationConfiguration>(
+    TValidationConfiguration validationConfig
+) : IFieldValidator
 {
     protected readonly TValidationConfiguration ValidationConfig = validationConfig;
 

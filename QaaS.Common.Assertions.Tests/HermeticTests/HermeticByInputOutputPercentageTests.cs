@@ -15,76 +15,79 @@ namespace QaaS.Common.Assertions.Tests.HermeticTests;
 [TestFixture]
 public class HermeticByInputOutputPercentageTests
 {
-    [Test, 
-     TestCase(0, 0),
-     TestCase(0, 6),
-     TestCase(6, 0),
-     TestCase(6, 6),
-     TestCase(6, 1000),
-     TestCase(1000, 6),
-     TestCase(1000, 1000)]
+    [
+        Test,
+        TestCase(0, 0),
+        TestCase(0, 6),
+        TestCase(6, 0),
+        TestCase(6, 6),
+        TestCase(6, 1000),
+        TestCase(1000, 6),
+        TestCase(1000, 1000)
+    ]
     public void TestAssertSingleSession_CallAssertFunctionWithASingleSessionWithCorrectExpectedPercentage_ShouldReturnTrue(
-        int numberOfOutputsDivisibleBy2, int numberOfOutputSourcesDivisibleBy2)
+        int numberOfOutputsDivisibleBy2,
+        int numberOfOutputSourcesDivisibleBy2
+    )
     {
         // Arrange
         var outputNames = new List<string>(numberOfOutputSourcesDivisibleBy2);
         var outputSources = new List<CommunicationData<object>>(numberOfOutputSourcesDivisibleBy2);
-        for(var outputSourceNumber = 0; outputSourceNumber < numberOfOutputSourcesDivisibleBy2; outputSourceNumber ++)
+        for (
+            var outputSourceNumber = 0;
+            outputSourceNumber < numberOfOutputSourcesDivisibleBy2;
+            outputSourceNumber++
+        )
         {
             var outputs = new List<DetailedData<object>>();
-            for(var outputNumber = 0; outputNumber < numberOfOutputsDivisibleBy2; outputNumber ++)
+            for (var outputNumber = 0; outputNumber < numberOfOutputsDivisibleBy2; outputNumber++)
             {
                 outputs.Add(new DetailedData<object>());
             }
 
             var outputName = outputSourceNumber.ToString();
-            outputSources.Add(new CommunicationData<object>
-            {
-                Name = outputName,
-                Data = outputs
-            });
+            outputSources.Add(new CommunicationData<object> { Name = outputName, Data = outputs });
             outputNames.Add(outputName);
         }
-        
-        var inputNames = new List<string>(numberOfOutputSourcesDivisibleBy2/2);
-        var inputSources = new List<CommunicationData<object>>(numberOfOutputSourcesDivisibleBy2/2);
-        for(var inputSourceNumber = 0; inputSourceNumber < numberOfOutputSourcesDivisibleBy2/2; inputSourceNumber ++)
+
+        var inputNames = new List<string>(numberOfOutputSourcesDivisibleBy2 / 2);
+        var inputSources = new List<CommunicationData<object>>(
+            numberOfOutputSourcesDivisibleBy2 / 2
+        );
+        for (
+            var inputSourceNumber = 0;
+            inputSourceNumber < numberOfOutputSourcesDivisibleBy2 / 2;
+            inputSourceNumber++
+        )
         {
             var inputs = new List<DetailedData<object>>();
-            for(var inputNumber = 0; inputNumber < numberOfOutputsDivisibleBy2/2; inputNumber ++)
+            for (var inputNumber = 0; inputNumber < numberOfOutputsDivisibleBy2 / 2; inputNumber++)
             {
                 inputs.Add(new DetailedData<object>());
             }
 
             var inputName = inputSourceNumber.ToString();
-            inputSources.Add(new CommunicationData<object>
-            {
-                Name = inputName,
-                Data = inputs
-            });
+            inputSources.Add(new CommunicationData<object> { Name = inputName, Data = inputs });
             inputNames.Add(inputName);
         }
-        
+
         var configurations = new HermeticByInputOutputPercentageConfiguration
         {
             OutputNames = outputNames.ToArray(),
             InputNames = inputNames.ToArray(),
-            ExpectedPercentage = 400
+            ExpectedPercentage = 400,
         };
         var session = new SessionData
         {
             Name = "Id1",
             Outputs = outputSources,
-            Inputs = inputSources
+            Inputs = inputSources,
         };
-        var sessionList = new List<SessionData>
-        {
-            session
-        }.ToImmutableList();
+        var sessionList = new List<SessionData> { session }.ToImmutableList();
         var assertion = new HermeticByInputOutputPercentage
         {
-            Context = new Context{Logger = Globals.Logger},
-            Configuration = configurations
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = configurations,
         };
 
         // Act
@@ -94,73 +97,70 @@ public class HermeticByInputOutputPercentageTests
         Assert.IsTrue(result);
     }
 
-    [Test,
-     TestCase(6, 6),
-     TestCase(6, 1000),
-     TestCase(1000, 6),
-     TestCase(1000, 1000)]
+    [Test, TestCase(6, 6), TestCase(6, 1000), TestCase(1000, 6), TestCase(1000, 1000)]
     public void TestAssertSingleSession_CallAssertFunctionWithASingleSessionWithIncorrectExpectedPercentage_ShouldReturnFalse(
-        int numberOfOutputsDivisibleBy2, int numberOfOutputSourcesDivisibleBy2)
+        int numberOfOutputsDivisibleBy2,
+        int numberOfOutputSourcesDivisibleBy2
+    )
     {
         // Arrange
         var outputNames = new List<string>(numberOfOutputSourcesDivisibleBy2);
         var outputSources = new List<CommunicationData<object>>(numberOfOutputSourcesDivisibleBy2);
-        for(var outputSourceNumber = 0; outputSourceNumber < numberOfOutputSourcesDivisibleBy2; outputSourceNumber ++)
+        for (
+            var outputSourceNumber = 0;
+            outputSourceNumber < numberOfOutputSourcesDivisibleBy2;
+            outputSourceNumber++
+        )
         {
             var outputs = new List<DetailedData<object>>();
-            for(var outputNumber = 0; outputNumber < numberOfOutputsDivisibleBy2; outputNumber ++)
+            for (var outputNumber = 0; outputNumber < numberOfOutputsDivisibleBy2; outputNumber++)
             {
                 outputs.Add(new DetailedData<object>());
             }
 
             var outputName = outputSourceNumber.ToString();
-            outputSources.Add(new CommunicationData<object>
-            {
-                Name = outputName,
-                Data = outputs
-            });
+            outputSources.Add(new CommunicationData<object> { Name = outputName, Data = outputs });
             outputNames.Add(outputName);
         }
-        
-        var inputNames = new List<string>(numberOfOutputSourcesDivisibleBy2/2);
-        var inputSources = new List<CommunicationData<object>>(numberOfOutputSourcesDivisibleBy2/2);
-        for(var inputSourceNumber = 0; inputSourceNumber < numberOfOutputSourcesDivisibleBy2/2; inputSourceNumber ++)
+
+        var inputNames = new List<string>(numberOfOutputSourcesDivisibleBy2 / 2);
+        var inputSources = new List<CommunicationData<object>>(
+            numberOfOutputSourcesDivisibleBy2 / 2
+        );
+        for (
+            var inputSourceNumber = 0;
+            inputSourceNumber < numberOfOutputSourcesDivisibleBy2 / 2;
+            inputSourceNumber++
+        )
         {
             var inputs = new List<DetailedData<object>>();
-            for(var inputNumber = 0; inputNumber < numberOfOutputsDivisibleBy2/2; inputNumber ++)
+            for (var inputNumber = 0; inputNumber < numberOfOutputsDivisibleBy2 / 2; inputNumber++)
             {
                 inputs.Add(new DetailedData<object>());
             }
 
             var inputName = inputSourceNumber.ToString();
-            inputSources.Add(new CommunicationData<object>
-            {
-                Name = inputName,
-                Data = inputs
-            });
+            inputSources.Add(new CommunicationData<object> { Name = inputName, Data = inputs });
             inputNames.Add(inputName);
         }
-        
+
         var configurations = new HermeticByInputOutputPercentageConfiguration
         {
             OutputNames = outputNames.ToArray(),
             InputNames = inputNames.ToArray(),
-            ExpectedPercentage = 50
+            ExpectedPercentage = 50,
         };
         var session = new SessionData
         {
             Name = "Id1",
             Outputs = outputSources,
-            Inputs = inputSources
+            Inputs = inputSources,
         };
-        var sessionList = new List<SessionData>
-        {
-            session
-        }.ToImmutableList();
+        var sessionList = new List<SessionData> { session }.ToImmutableList();
         var assertion = new HermeticByInputOutputPercentage
         {
-            Context = new Context{Logger = Globals.Logger},
-            Configuration = configurations
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = configurations,
         };
 
         // Act
@@ -178,9 +178,17 @@ public class HermeticByInputOutputPercentageTests
             Name = "Id1",
             Outputs = new List<CommunicationData<object>>
             {
-                new() { Name = "inputAsOutput", Data = new List<DetailedData<object>> { new(), new(), new(), new() } },
-                new() { Name = "result", Data = new List<DetailedData<object>> { new(), new() } }
-            }
+                new()
+                {
+                    Name = "inputAsOutput",
+                    Data = new List<DetailedData<object>> { new(), new(), new(), new() },
+                },
+                new()
+                {
+                    Name = "result",
+                    Data = new List<DetailedData<object>> { new(), new() },
+                },
+            },
         };
         var assertion = new HermeticByInputOutputPercentage
         {
@@ -190,11 +198,14 @@ public class HermeticByInputOutputPercentageTests
                 InputNames = new[] { "inputAsOutput" },
                 OutputNames = new[] { "result" },
                 InputsAreOutputs = true,
-                ExpectedPercentage = 50
-            }
+                ExpectedPercentage = 50,
+            },
         };
 
-        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+        var result = assertion.Assert(
+            new List<SessionData> { session }.ToImmutableList(),
+            ImmutableList<DataSource>.Empty
+        );
 
         Assert.That(result, Is.True);
     }
@@ -206,7 +217,7 @@ public class HermeticByInputOutputPercentageTests
         {
             Name = "Id1",
             Inputs = new List<CommunicationData<object>>(),
-            Outputs = new List<CommunicationData<object>>()
+            Outputs = new List<CommunicationData<object>>(),
         };
         var assertion = new HermeticByInputOutputPercentage
         {
@@ -215,14 +226,20 @@ public class HermeticByInputOutputPercentageTests
             {
                 InputNames = new[] { "missing-input" },
                 OutputNames = new[] { "missing-output" },
-                ExpectedPercentage = 400
-            }
+                ExpectedPercentage = 400,
+            },
         };
 
-        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+        var result = assertion.Assert(
+            new List<SessionData> { session }.ToImmutableList(),
+            ImmutableList<DataSource>.Empty
+        );
 
         Assert.That(result, Is.True);
-        StringAssert.Contains("percentage between the total output count and total input count is 0", assertion.AssertionMessage!);
+        StringAssert.Contains(
+            "percentage between the total output count and total input count is 0",
+            assertion.AssertionMessage!
+        );
     }
 
     [Test]
@@ -234,8 +251,12 @@ public class HermeticByInputOutputPercentageTests
             Inputs = new List<CommunicationData<object>>(),
             Outputs = new List<CommunicationData<object>>
             {
-                new() { Name = "out", Data = new List<DetailedData<object>> { new() } }
-            }
+                new()
+                {
+                    Name = "out",
+                    Data = new List<DetailedData<object>> { new() },
+                },
+            },
         };
         var assertion = new HermeticByInputOutputPercentage
         {
@@ -244,11 +265,14 @@ public class HermeticByInputOutputPercentageTests
             {
                 InputNames = new[] { "missing-input" },
                 OutputNames = new[] { "out" },
-                ExpectedPercentage = 100
-            }
+                ExpectedPercentage = 100,
+            },
         };
 
-        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+        var result = assertion.Assert(
+            new List<SessionData> { session }.ToImmutableList(),
+            ImmutableList<DataSource>.Empty
+        );
 
         Assert.That(result, Is.False);
     }

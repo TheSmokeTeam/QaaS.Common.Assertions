@@ -14,56 +14,53 @@ namespace QaaS.Common.Assertions.Tests.HermeticTests;
 [TestFixture]
 public class HermeticByExpectedOutputCountTests
 {
-    [Test, 
-     TestCase(0, 0),
-     TestCase(0, 1),
-     TestCase(1, 0),
-     TestCase(1, 1),
-     TestCase(1, 1000),
-     TestCase(1000, 1),
-     TestCase(1000, 1000)]
+    [
+        Test,
+        TestCase(0, 0),
+        TestCase(0, 1),
+        TestCase(1, 0),
+        TestCase(1, 1),
+        TestCase(1, 1000),
+        TestCase(1000, 1),
+        TestCase(1000, 1000)
+    ]
     public void TestAssertSingleSession_CallAssertFunctionWithASingleSessionWithCorrectExpectedCount_ShouldReturnTrue(
-        int numberOfOutputs, int numberOfOutputSources)
+        int numberOfOutputs,
+        int numberOfOutputSources
+    )
     {
         // Arrange
         var outputNames = new List<string>(numberOfOutputSources);
         var outputSources = new List<CommunicationData<object>>(numberOfOutputSources);
-        for(var outputSourceNumber = 0; outputSourceNumber < numberOfOutputSources; outputSourceNumber ++)
+        for (
+            var outputSourceNumber = 0;
+            outputSourceNumber < numberOfOutputSources;
+            outputSourceNumber++
+        )
         {
             var outputs = new List<DetailedData<object>>();
-            for(var outputNumber = 0; outputNumber < numberOfOutputs; outputNumber ++)
+            for (var outputNumber = 0; outputNumber < numberOfOutputs; outputNumber++)
             {
                 outputs.Add(new DetailedData<object>());
             }
 
             var outputName = outputSourceNumber.ToString();
-            outputSources.Add(new CommunicationData<object>
-            {
-                Name = outputName,
-                Data = outputs
-            });
+            outputSources.Add(new CommunicationData<object> { Name = outputName, Data = outputs });
             outputNames.Add(outputName);
         }
-        
+
         var configurations = new HermeticByExpectedOutputCountConfiguration
         {
             OutputNames = outputNames.ToArray(),
-            ExpectedCount = numberOfOutputs*numberOfOutputSources
+            ExpectedCount = numberOfOutputs * numberOfOutputSources,
         };
-        var session = new SessionData
-        {
-            Name = "Id1",
-            Outputs = outputSources
-        };
+        var session = new SessionData { Name = "Id1", Outputs = outputSources };
         var assertion = new HermeticByExpectedOutputCount
         {
-            Context = new Context{Logger = Globals.Logger},
-            Configuration = configurations
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = configurations,
         };
-        var sessionList = new List<SessionData>
-        {
-            session
-        }.ToImmutableList();
+        var sessionList = new List<SessionData> { session }.ToImmutableList();
 
         // Act
         var result = assertion.Assert(sessionList, new ImmutableArray<DataSource>());
@@ -71,57 +68,53 @@ public class HermeticByExpectedOutputCountTests
         // Assert
         Assert.IsTrue(result);
     }
-    
-    [Test,
-     TestCase(0, 0),
-     TestCase(0, 1),
-     TestCase(1, 0),
-     TestCase(1, 1),
-     TestCase(1, 1000),
-     TestCase(1000, 1),
-     TestCase(1000, 1000)]
+
+    [
+        Test,
+        TestCase(0, 0),
+        TestCase(0, 1),
+        TestCase(1, 0),
+        TestCase(1, 1),
+        TestCase(1, 1000),
+        TestCase(1000, 1),
+        TestCase(1000, 1000)
+    ]
     public void TestAssertSingleSession_CallAssertFunctionWithASingleSessionWithIncorrectExpectedCount_ShouldReturnFalse(
-        int numberOfOutputs, int numberOfOutputSources)
+        int numberOfOutputs,
+        int numberOfOutputSources
+    )
     {
         // Arrange
         var outputNames = new List<string>(numberOfOutputSources);
         var outputSources = new List<CommunicationData<object>>(numberOfOutputSources);
-        for(var outputSourceNumber = 0; outputSourceNumber < numberOfOutputSources; outputSourceNumber ++)
+        for (
+            var outputSourceNumber = 0;
+            outputSourceNumber < numberOfOutputSources;
+            outputSourceNumber++
+        )
         {
             var outputs = new List<DetailedData<object>>();
-            for(var outputNumber = 0; outputNumber < numberOfOutputs; outputNumber ++)
+            for (var outputNumber = 0; outputNumber < numberOfOutputs; outputNumber++)
             {
                 outputs.Add(new DetailedData<object>());
             }
 
             var outputName = outputSourceNumber.ToString();
-            outputSources.Add(new CommunicationData<object>
-            {
-                Name = outputName,
-                Data = outputs
-            });
+            outputSources.Add(new CommunicationData<object> { Name = outputName, Data = outputs });
             outputNames.Add(outputName);
         }
-        
+
         var configurations = new HermeticByExpectedOutputCountConfiguration
         {
             OutputNames = outputNames.ToArray(),
-            ExpectedCount = numberOfOutputs*numberOfOutputSources + 2
+            ExpectedCount = numberOfOutputs * numberOfOutputSources + 2,
         };
-        var session = new SessionData
-        {
-            
-            Name = "Id1",
-            Outputs = outputSources
-        };
-        var sessionList = new List<SessionData>
-        {
-            session
-        }.ToImmutableList();
+        var session = new SessionData { Name = "Id1", Outputs = outputSources };
+        var sessionList = new List<SessionData> { session }.ToImmutableList();
         var assertion = new HermeticByExpectedOutputCount
         {
-            Context = new Context{Logger = Globals.Logger},
-            Configuration = configurations
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = configurations,
         };
 
         // Act
@@ -142,9 +135,9 @@ public class HermeticByExpectedOutputCountTests
                 new()
                 {
                     Name = "existing",
-                    Data = new List<DetailedData<object>> { new() }
-                }
-            }
+                    Data = new List<DetailedData<object>> { new() },
+                },
+            },
         };
         var assertion = new HermeticByExpectedOutputCount
         {
@@ -152,11 +145,14 @@ public class HermeticByExpectedOutputCountTests
             Configuration = new HermeticByExpectedOutputCountConfiguration
             {
                 OutputNames = new[] { "existing", "missing" },
-                ExpectedCount = 1
-            }
+                ExpectedCount = 1,
+            },
         };
 
-        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+        var result = assertion.Assert(
+            new List<SessionData> { session }.ToImmutableList(),
+            ImmutableList<DataSource>.Empty
+        );
 
         Assert.That(result, Is.True);
     }
@@ -174,9 +170,9 @@ public class HermeticByExpectedOutputCountTests
                     new()
                     {
                         Name = "existing",
-                        Data = new List<DetailedData<object>> { new(), new() }
-                    }
-                }
+                        Data = new List<DetailedData<object>> { new(), new() },
+                    },
+                },
             },
             new()
             {
@@ -186,10 +182,10 @@ public class HermeticByExpectedOutputCountTests
                     new()
                     {
                         Name = "existing",
-                        Data = new List<DetailedData<object>> { new() }
-                    }
-                }
-            }
+                        Data = new List<DetailedData<object>> { new() },
+                    },
+                },
+            },
         }.ToImmutableList();
         var assertion = new HermeticByExpectedOutputCount
         {
@@ -197,8 +193,8 @@ public class HermeticByExpectedOutputCountTests
             Configuration = new HermeticByExpectedOutputCountConfiguration
             {
                 OutputNames = new[] { "existing" },
-                ExpectedCount = 3
-            }
+                ExpectedCount = 3,
+            },
         };
 
         var result = assertion.Assert(sessions, ImmutableList<DataSource>.Empty);

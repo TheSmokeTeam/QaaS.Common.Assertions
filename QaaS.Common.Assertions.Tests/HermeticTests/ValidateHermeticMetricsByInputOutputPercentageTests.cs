@@ -25,71 +25,77 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
         SessionName = "session",
         CollectorName = "outputMetrics";
 
-    [Test,
-     TestCase(1, 1, 1, 1, true),
-     TestCase(1, 10, 1, 10, true),
-     TestCase(10, 10, 10, 10, true),
-     TestCase(50, 10, 50, 10, true),
-     TestCase(50, 50, 50, 50, true),
-     TestCase(50, 50, 50, 1, false),
-     TestCase(10, 10, 1, 10, false)]
-    public void
-        TestAssertSingleSession_CallAssertFunctionWithASingleSessionWithConfiguredMetricsAndInputOutputValues_AssertionShouldReturnExpectedResult(
-            int inputCount, int outputCount, int inputMetricValue, int outputMetricValue, bool expectedResult)
+    [
+        Test,
+        TestCase(1, 1, 1, 1, true),
+        TestCase(1, 10, 1, 10, true),
+        TestCase(10, 10, 10, 10, true),
+        TestCase(50, 10, 50, 10, true),
+        TestCase(50, 50, 50, 50, true),
+        TestCase(50, 50, 50, 1, false),
+        TestCase(10, 10, 1, 10, false)
+    ]
+    public void TestAssertSingleSession_CallAssertFunctionWithASingleSessionWithConfiguredMetricsAndInputOutputValues_AssertionShouldReturnExpectedResult(
+        int inputCount,
+        int outputCount,
+        int inputMetricValue,
+        int outputMetricValue,
+        bool expectedResult
+    )
     {
         // Arrange
-        var inputData = Enumerable.Range(0, inputCount).Select(input => new DetailedData<object>()
-        {
-            Body = input,
-            Timestamp = DateTime.UtcNow
-        }).ToList();
-        var outputData = Enumerable.Range(0, outputCount).Select(output => new DetailedData<object>()
-        {
-            Body = output,
-            Timestamp = DateTime.UtcNow
-        }).ToList();
-        var outputMetricResult = Enumerable.Range(0, outputCount).Select(_ => new DetailedData<object>()
-        {
-            Body = new JsonObject
+        var inputData = Enumerable
+            .Range(0, inputCount)
+            .Select(input => new DetailedData<object>()
             {
-                {
-                    Metric, new JsonObject
-                    {
-                        { NameProperty, OutputMetricName },
-                    }
-                },
-                { ValueProperty, outputMetricValue.ToString() }
-            },
-            Timestamp = DateTime.UtcNow
-        }).ToList();
-        var inputMetricResult = Enumerable.Range(0, inputCount).Select(_ => new DetailedData<object>()
-        {
-            Body = new JsonObject
+                Body = input,
+                Timestamp = DateTime.UtcNow,
+            })
+            .ToList();
+        var outputData = Enumerable
+            .Range(0, outputCount)
+            .Select(output => new DetailedData<object>()
             {
+                Body = output,
+                Timestamp = DateTime.UtcNow,
+            })
+            .ToList();
+        var outputMetricResult = Enumerable
+            .Range(0, outputCount)
+            .Select(_ => new DetailedData<object>()
+            {
+                Body = new JsonObject
                 {
-                    Metric, new JsonObject
                     {
-                        { NameProperty, InputMetricName },
-                    }
+                        Metric,
+                        new JsonObject { { NameProperty, OutputMetricName } }
+                    },
+                    { ValueProperty, outputMetricValue.ToString() },
                 },
-                { ValueProperty, inputMetricValue.ToString() }
-            },
-            Timestamp = DateTime.UtcNow
-        }).ToList();
-        var input = new CommunicationData<object>()
-        {
-            Name = "input",
-            Data = inputData
-        };
-        var output = new CommunicationData<object>()
-        {
-            Name = "output",
-            Data = outputData
-        };
+                Timestamp = DateTime.UtcNow,
+            })
+            .ToList();
+        var inputMetricResult = Enumerable
+            .Range(0, inputCount)
+            .Select(_ => new DetailedData<object>()
+            {
+                Body = new JsonObject
+                {
+                    {
+                        Metric,
+                        new JsonObject { { NameProperty, InputMetricName } }
+                    },
+                    { ValueProperty, inputMetricValue.ToString() },
+                },
+                Timestamp = DateTime.UtcNow,
+            })
+            .ToList();
+        var input = new CommunicationData<object>() { Name = "input", Data = inputData };
+        var output = new CommunicationData<object>() { Name = "output", Data = outputData };
         var outputMetrics = new CommunicationData<object>()
         {
             Name = CollectorName,
-            Data = inputMetricResult.Concat(outputMetricResult).ToList()
+            Data = inputMetricResult.Concat(outputMetricResult).ToList(),
         };
         var sessionDataList = new List<SessionData>()
         {
@@ -97,8 +103,8 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
             {
                 Name = SessionName,
                 Outputs = [output, outputMetrics],
-                Inputs = [input]
-            }
+                Inputs = [input],
+            },
         }.ToImmutableList();
         var assertion = new ValidateHermeticMetricsByInputOutputPercentage()
         {
@@ -109,11 +115,11 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
                 OutputMetricName = OutputMetricName,
                 InputNames = ["input"],
                 OutputNames = ["output"],
-                MetricOutputSourceName = CollectorName
-            }
+                MetricOutputSourceName = CollectorName,
+            },
         };
 
-        // Act 
+        // Act
         var result = assertion.Assert(sessionDataList, new ImmutableArray<DataSource>());
 
         // Assert
@@ -121,48 +127,46 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
     }
 
     [Test]
-    public void
-        TestAssertSingleSession_CallAssertFunctionWithASingleSessionWithInvalidMetrics_AssertionShouldThrowError()
+    public void TestAssertSingleSession_CallAssertFunctionWithASingleSessionWithInvalidMetrics_AssertionShouldThrowError()
     {
         // Arrange
-        var inputData = Enumerable.Range(0, 10).Select(input => new DetailedData<object>()
-        {
-            Body = input,
-            Timestamp = DateTime.UtcNow
-        }).ToList();
-        var outputData = Enumerable.Range(0, 10).Select(output => new DetailedData<object>()
-        {
-            Body = output,
-            Timestamp = DateTime.UtcNow
-        }).ToList();
-        var outputMetricResult = Enumerable.Range(0, 10).Select(_ => new DetailedData<object>()
-        {
-            Body = new JsonObject
+        var inputData = Enumerable
+            .Range(0, 10)
+            .Select(input => new DetailedData<object>()
             {
+                Body = input,
+                Timestamp = DateTime.UtcNow,
+            })
+            .ToList();
+        var outputData = Enumerable
+            .Range(0, 10)
+            .Select(output => new DetailedData<object>()
+            {
+                Body = output,
+                Timestamp = DateTime.UtcNow,
+            })
+            .ToList();
+        var outputMetricResult = Enumerable
+            .Range(0, 10)
+            .Select(_ => new DetailedData<object>()
+            {
+                Body = new JsonObject
                 {
-                    Metric, new JsonObject
                     {
-                        { NameProperty, OutputMetricName },
-                    }
+                        Metric,
+                        new JsonObject { { NameProperty, OutputMetricName } }
+                    },
                 },
-            },
-            Timestamp = DateTime.UtcNow
-        }).ToList();
+                Timestamp = DateTime.UtcNow,
+            })
+            .ToList();
 
-        var input = new CommunicationData<object>()
-        {
-            Name = "input",
-            Data = inputData
-        };
-        var output = new CommunicationData<object>()
-        {
-            Name = "output",
-            Data = outputData
-        };
+        var input = new CommunicationData<object>() { Name = "input", Data = inputData };
+        var output = new CommunicationData<object>() { Name = "output", Data = outputData };
         var outputMetrics = new CommunicationData<object>()
         {
             Name = CollectorName,
-            Data = outputMetricResult
+            Data = outputMetricResult,
         };
         var sessionDataList = new List<SessionData>()
         {
@@ -170,8 +174,8 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
             {
                 Name = SessionName,
                 Outputs = [output, outputMetrics],
-                Inputs = [input]
-            }
+                Inputs = [input],
+            },
         }.ToImmutableList();
         var assertion = new ValidateHermeticMetricsByInputOutputPercentage()
         {
@@ -182,33 +186,36 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
                 OutputMetricName = OutputMetricName,
                 InputNames = ["input"],
                 OutputNames = ["output"],
-                MetricOutputSourceName = CollectorName
-            }
+                MetricOutputSourceName = CollectorName,
+            },
         };
-
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() =>
-            assertion.Assert(sessionDataList, new ImmutableArray<DataSource>()));
+            assertion.Assert(sessionDataList, new ImmutableArray<DataSource>())
+        );
     }
 
     [Test]
-    public void
-        TestAssertSingleSession_CallAssertFunctionWithNoInputsAndNoOutputsAndNoMetricsValues_AssertionShouldPass()
+    public void TestAssertSingleSession_CallAssertFunctionWithNoInputsAndNoOutputsAndNoMetricsValues_AssertionShouldPass()
     {
         var outputMetrics = new CommunicationData<object>()
         {
             Name = CollectorName,
-            Data = new List<DetailedData<object>>()
+            Data = new List<DetailedData<object>>(),
         };
         var sessionDataList = new List<SessionData>()
         {
             new()
             {
                 Name = SessionName,
-                Outputs = [new CommunicationData<object> { Name = "output", Data = [] }, outputMetrics],
-                Inputs = [new CommunicationData<object> { Name = "input", Data = [] }]
-            }
+                Outputs =
+                [
+                    new CommunicationData<object> { Name = "output", Data = [] },
+                    outputMetrics,
+                ],
+                Inputs = [new CommunicationData<object> { Name = "input", Data = [] }],
+            },
         }.ToImmutableList();
         var assertion = new ValidateHermeticMetricsByInputOutputPercentage()
         {
@@ -219,8 +226,8 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
                 OutputMetricName = OutputMetricName,
                 InputNames = ["input"],
                 OutputNames = ["output"],
-                MetricOutputSourceName = CollectorName
-            }
+                MetricOutputSourceName = CollectorName,
+            },
         };
 
         var result = assertion.Assert(sessionDataList, ImmutableList<DataSource>.Empty);
@@ -229,12 +236,11 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
     }
 
     [Test]
-    public void
-        TestAssertSingleSession_CallAssertFunctionWithNoInputsAndSomeOutputs_AssertionShouldFailWithoutThrowing()
+    public void TestAssertSingleSession_CallAssertFunctionWithNoInputsAndSomeOutputs_AssertionShouldFailWithoutThrowing()
     {
         var outputData = new List<DetailedData<object>>
         {
-            new() { Body = 1, Timestamp = DateTime.UtcNow }
+            new() { Body = 1, Timestamp = DateTime.UtcNow },
         };
         var outputMetricResult = new List<DetailedData<object>>
         {
@@ -243,15 +249,13 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
                 Body = new JsonObject
                 {
                     {
-                        Metric, new JsonObject
-                        {
-                            { NameProperty, OutputMetricName }
-                        }
+                        Metric,
+                        new JsonObject { { NameProperty, OutputMetricName } }
                     },
-                    { ValueProperty, "1" }
+                    { ValueProperty, "1" },
                 },
-                Timestamp = DateTime.UtcNow
-            }
+                Timestamp = DateTime.UtcNow,
+            },
         };
         var sessionDataList = new List<SessionData>()
         {
@@ -261,10 +265,14 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
                 Outputs =
                 [
                     new CommunicationData<object> { Name = "output", Data = outputData },
-                    new CommunicationData<object> { Name = CollectorName, Data = outputMetricResult }
+                    new CommunicationData<object>
+                    {
+                        Name = CollectorName,
+                        Data = outputMetricResult,
+                    },
                 ],
-                Inputs = [new CommunicationData<object> { Name = "input", Data = [] }]
-            }
+                Inputs = [new CommunicationData<object> { Name = "input", Data = [] }],
+            },
         }.ToImmutableList();
         var assertion = new ValidateHermeticMetricsByInputOutputPercentage()
         {
@@ -275,8 +283,8 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
                 OutputMetricName = OutputMetricName,
                 InputNames = ["input"],
                 OutputNames = ["output"],
-                MetricOutputSourceName = CollectorName
-            }
+                MetricOutputSourceName = CollectorName,
+            },
         };
 
         var result = assertion.Assert(sessionDataList, ImmutableList<DataSource>.Empty);
@@ -303,8 +311,8 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
                             new DetailedData<object> { Body = 1, Timestamp = timestamp },
                             new DetailedData<object> { Body = 2, Timestamp = timestamp },
                             new DetailedData<object> { Body = 3, Timestamp = timestamp },
-                            new DetailedData<object> { Body = 4, Timestamp = timestamp }
-                        ]
+                            new DetailedData<object> { Body = 4, Timestamp = timestamp },
+                        ],
                     },
                     new CommunicationData<object>
                     {
@@ -312,8 +320,8 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
                         Data =
                         [
                             new DetailedData<object> { Body = 1, Timestamp = timestamp },
-                            new DetailedData<object> { Body = 2, Timestamp = timestamp }
-                        ]
+                            new DetailedData<object> { Body = 2, Timestamp = timestamp },
+                        ],
                     },
                     new CommunicationData<object>
                     {
@@ -325,33 +333,29 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
                                 Body = new JsonObject
                                 {
                                     {
-                                        Metric, new JsonObject
-                                        {
-                                            { NameProperty, InputMetricName }
-                                        }
+                                        Metric,
+                                        new JsonObject { { NameProperty, InputMetricName } }
                                     },
-                                    { ValueProperty, "4" }
+                                    { ValueProperty, "4" },
                                 },
-                                Timestamp = timestamp
+                                Timestamp = timestamp,
                             },
                             new DetailedData<object>
                             {
                                 Body = new JsonObject
                                 {
                                     {
-                                        Metric, new JsonObject
-                                        {
-                                            { NameProperty, OutputMetricName }
-                                        }
+                                        Metric,
+                                        new JsonObject { { NameProperty, OutputMetricName } }
                                     },
-                                    { ValueProperty, "2" }
+                                    { ValueProperty, "2" },
                                 },
-                                Timestamp = timestamp
-                            }
-                        ]
-                    }
-                ]
-            }
+                                Timestamp = timestamp,
+                            },
+                        ],
+                    },
+                ],
+            },
         }.ToImmutableList();
         var assertion = new ValidateHermeticMetricsByInputOutputPercentage
         {
@@ -363,8 +367,8 @@ public class ValidateHermeticMetricsByInputOutputPercentageTests
                 InputNames = ["inputAsOutput"],
                 InputsAreOutputs = true,
                 OutputNames = ["output"],
-                MetricOutputSourceName = CollectorName
-            }
+                MetricOutputSourceName = CollectorName,
+            },
         };
 
         var result = assertion.Assert(sessionDataList, ImmutableList<DataSource>.Empty);
