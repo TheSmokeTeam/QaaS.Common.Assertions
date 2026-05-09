@@ -9,10 +9,11 @@ namespace QaaS.Common.Assertions.Tests.SchemaLogicTests;
 [TestFixture]
 public class ProtobufOutputJsonSchemaTests
 {
-    private static readonly MethodInfo DeserializeMethod =
-        typeof(ObjectOutputJsonSchema).GetMethod("DeserializeOutputToJson", 
-            BindingFlags.Static | BindingFlags.NonPublic)!;
-    
+    private static readonly MethodInfo DeserializeMethod = typeof(ObjectOutputJsonSchema).GetMethod(
+        "DeserializeOutputToJson",
+        BindingFlags.Static | BindingFlags.NonPublic
+    )!;
+
     [Test]
     public void TestDeserializeOutputToJsonWithType_CallFunctionWithMessagePack_ShouldConvertMessagePackToCorrectJson()
     {
@@ -21,14 +22,13 @@ public class ProtobufOutputJsonSchemaTests
         {
             Age = 1,
             Id = 123,
-            Name = "Alice"
+            Name = "Alice",
         };
         var assertion = new ObjectOutputJsonSchema();
-        
+
         // Act
-        var json = (JsonNode?)DeserializeMethod.Invoke(assertion, 
-            new object?[]{testObject});
-        
+        var json = (JsonNode?)DeserializeMethod.Invoke(assertion, new object?[] { testObject });
+
         // Assert
         Assert.AreEqual(testObject.Age, json?["Age"]?.GetValue<int>());
         Assert.AreEqual(testObject.Id, json?["Id"]?.GetValue<int>());

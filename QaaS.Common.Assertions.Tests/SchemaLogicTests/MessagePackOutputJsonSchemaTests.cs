@@ -14,33 +14,30 @@ public class MessagePackOutputJsonSchemaTests
     {
         [Key(0)]
         public int? Number { get; set; }
-        
+
         [Key(1)]
         public string? String { get; set; }
     }
 
-    private static readonly MethodInfo DeserializeMethod =
-        typeof(ObjectOutputJsonSchema).GetMethod("DeserializeOutputToJson", 
-            BindingFlags.Static | BindingFlags.NonPublic)!;
-    
+    private static readonly MethodInfo DeserializeMethod = typeof(ObjectOutputJsonSchema).GetMethod(
+        "DeserializeOutputToJson",
+        BindingFlags.Static | BindingFlags.NonPublic
+    )!;
+
     [Test]
     public void TestDeserializeOutputToJson_CallFunctionWithMessagePack_ShouldConvertMessagePackToCorrectJson()
     {
         // Arrange
-        var serializableObject = new SerializableObject
-        {
-            Number = 1,
-            String = "dsjfods"
-        };
+        var serializableObject = new SerializableObject { Number = 1, String = "dsjfods" };
 
         var assertion = new ObjectOutputJsonSchema();
 
         // Act
-        var json = (JsonNode?)DeserializeMethod.Invoke(assertion, new object?[]{serializableObject});
-        
+        var json = (JsonNode?)
+            DeserializeMethod.Invoke(assertion, new object?[] { serializableObject });
+
         // Assert
         Assert.AreEqual(serializableObject?.Number, json?["Number"]?.GetValue<int>());
         Assert.AreEqual(serializableObject?.String, json?["String"]?.GetValue<string>());
-
     }
 }

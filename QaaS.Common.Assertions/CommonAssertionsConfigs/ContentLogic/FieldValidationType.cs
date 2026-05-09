@@ -5,5 +5,5 @@ public enum FieldValidationType
     ErrorRange,
     ExactValue,
     ExactOverrideValue,
-    Base64ToHex
+    Base64ToHex,
 }

@@ -18,13 +18,16 @@ namespace QaaS.Common.Assertions.Delay;
 /// chunks of a configured size, takes the chunks in ascending order of the input/output lists.
 /// </summary>
 /// <qaas-docs group="Latency" subgroup="Chunk latency" />
-public class DelayByChunks: BaseAssertion<DelayByChunksConfiguration>
+public class DelayByChunks : BaseAssertion<DelayByChunksConfiguration>
 {
     private const string DateTimeLogFormat = "yyyy-MM-dd HH:mm:ss.fff";
     private readonly StringBuilder _traceStringBuilder = new();
-    
+
     /// <inheritdoc />
-    public override bool Assert(IImmutableList<SessionData> sessionDataList, IImmutableList<DataSource> dataSourceList)
+    public override bool Assert(
+        IImmutableList<SessionData> sessionDataList,
+        IImmutableList<DataSource> dataSourceList
+    )
     {
         var sessionData = sessionDataList.AsSingle();
         var output = sessionData.GetOutputByName(Configuration.Output!.Name!);
@@ -33,32 +36,40 @@ public class DelayByChunks: BaseAssertion<DelayByChunksConfiguration>
             : sessionData.GetInputByName(Configuration.Input!.Name!);
         var outputCount = output.Data.Count;
         var inputCount = input.Data.Count;
-         
+
         // If there is no input delay cannot be measured and an exception is thrown
-        if (inputCount == 0) throw new EmptyInputListException($"No input items were found in input {input.Name}," +
-                                                                    " cannot measure delay when no input was provided");
+        if (inputCount == 0)
+            throw new EmptyInputListException(
+                $"No input items were found in input {input.Name},"
+                    + " cannot measure delay when no input was provided"
+            );
         // If there should be no output there is no delay to calculate and the "output" arrived on time
         if (Configuration.Output.ChunkSize == 0)
         {
-            AssertionMessage = "Output ChunkSize was configured as 0, meaning there is no delay to calculate";
+            AssertionMessage =
+                "Output ChunkSize was configured as 0, meaning there is no delay to calculate";
             return true;
         }
         // If there should be output but there is no output this immediately fails
         if (outputCount == 0)
         {
-            AssertionMessage = $"No output items were found in the output {output.Name}" +
-                                " are you sure your input produces output? if its not supposed to " +
-                                "produce any output make sure to set Output.ChunkSize to 0";
+            AssertionMessage =
+                $"No output items were found in the output {output.Name}"
+                + " are you sure your input produces output? if its not supposed to "
+                + "produce any output make sure to set Output.ChunkSize to 0";
             return false;
         }
-        
-        var outputChunksCount = MultipleInputsToMultipleOutputsChunkCount((IReadOnlyList<DetailedData<object>>)input.Data,
-            (IReadOnlyList<DetailedData<object>>)output.Data);
-        
+
+        var outputChunksCount = MultipleInputsToMultipleOutputsChunkCount(
+            (IReadOnlyList<DetailedData<object>>)input.Data,
+            (IReadOnlyList<DetailedData<object>>)output.Data
+        );
+
         var expectedOutputChunkCount = inputCount / Configuration.Input.ChunkSize;
-        AssertionMessage = $"Expected {expectedOutputChunkCount} output chunks" +
-                           $" to arrive in under {Configuration.MaximumDelayMs} milliseconds," +
-                           $" {outputChunksCount} actually arrived";
+        AssertionMessage =
+            $"Expected {expectedOutputChunkCount} output chunks"
+            + $" to arrive in under {Configuration.MaximumDelayMs} milliseconds,"
+            + $" {outputChunksCount} actually arrived";
         AssertionTrace = _traceStringBuilder.ToString();
         return expectedOutputChunkCount == outputChunksCount;
     }
@@ -73,71 +84,98 @@ public class DelayByChunks: BaseAssertion<DelayByChunksConfiguration>
     /// <param name="inputList">The list of inputs with timestamps</param>
     /// <param name="outputList">The list of outputs with timestamps</param>
     /// <returns>The number of output chunks that arrived on time</returns>
-    private int MultipleInputsToMultipleOutputsChunkCount(IReadOnlyList<DetailedData<object>> inputList,
-        IReadOnlyList<DetailedData<object>> outputList)
+    private int MultipleInputsToMultipleOutputsChunkCount(
+        IReadOnlyList<DetailedData<object>> inputList,
+        IReadOnlyList<DetailedData<object>> outputList
+    )
     {
-        var chunkInputTimesList = GetListOfChunkTimes(inputList, Configuration.Input!.ChunkSize!.Value,
-            Configuration.Input!.ChunkTimeOption);
+        var chunkInputTimesList = GetListOfChunkTimes(
+            inputList,
+            Configuration.Input!.ChunkSize!.Value,
+            Configuration.Input!.ChunkTimeOption
+        );
         var chunkInputTimesListLength = chunkInputTimesList.Count;
-        var chunkOutputTimesList = GetListOfChunkTimes(outputList, Configuration.Output!.ChunkSize!.Value,
-            Configuration.Output!.ChunkTimeOption);
+        var chunkOutputTimesList = GetListOfChunkTimes(
+            outputList,
+            Configuration.Output!.ChunkSize!.Value,
+            Configuration.Output!.ChunkTimeOption
+        );
         var chunkOutputTimesListLength = chunkOutputTimesList.Count;
 
         if (chunkInputTimesListLength == 0)
         {
             _traceStringBuilder.Append(
-                "\nNo complete input chunks were found, no delay comparison can be performed.\n");
+                "\nNo complete input chunks were found, no delay comparison can be performed.\n"
+            );
             return 0;
         }
 
         if (chunkOutputTimesListLength == 0)
         {
             _traceStringBuilder.Append(
-                "\nNo complete output chunks were found, no chunks arrived on time.\n");
+                "\nNo complete output chunks were found, no chunks arrived on time.\n"
+            );
             return 0;
         }
 
         // Add to trace the average delay of chunks
         BigInteger averageInputChunksTime = 0;
-        chunkInputTimesList.ForEach(input => averageInputChunksTime += input.Ticks / TimeSpan.TicksPerMillisecond);
+        chunkInputTimesList.ForEach(input =>
+            averageInputChunksTime += input.Ticks / TimeSpan.TicksPerMillisecond
+        );
         averageInputChunksTime /= chunkInputTimesListLength;
 
         BigInteger averageOutputChunksTime = 0;
-        chunkOutputTimesList.ForEach(input => averageOutputChunksTime += input.Ticks / TimeSpan.TicksPerMillisecond);
+        chunkOutputTimesList.ForEach(input =>
+            averageOutputChunksTime += input.Ticks / TimeSpan.TicksPerMillisecond
+        );
         averageOutputChunksTime /= chunkOutputTimesListLength;
-        _traceStringBuilder.Append($"\nAverage output chunk time is {new DateTime(TimeSpan.FromMilliseconds((double)averageOutputChunksTime).Ticks).ToString(DateTimeLogFormat)} and " +
-                                   $"average input chunk time is {new DateTime(TimeSpan.FromMilliseconds((double)averageInputChunksTime).Ticks).ToString(DateTimeLogFormat)} making " +
-                                   $"the delay between all input and output chunks that arrived" +
-                                   $" {averageOutputChunksTime - averageInputChunksTime} milliseconds\n");
+        _traceStringBuilder.Append(
+            $"\nAverage output chunk time is {new DateTime(TimeSpan.FromMilliseconds((double)averageOutputChunksTime).Ticks).ToString(DateTimeLogFormat)} and "
+                + $"average input chunk time is {new DateTime(TimeSpan.FromMilliseconds((double)averageInputChunksTime).Ticks).ToString(DateTimeLogFormat)} making "
+                + $"the delay between all input and output chunks that arrived"
+                + $" {averageOutputChunksTime - averageInputChunksTime} milliseconds\n"
+        );
 
-        var negativeDelayBufferMilliSecondsAsNegativeNumber = -1 * Configuration.MaximumNegativeDelayBufferMs!.Value;
+        var negativeDelayBufferMilliSecondsAsNegativeNumber =
+            -1 * Configuration.MaximumNegativeDelayBufferMs!.Value;
         // Start calculation to see how many chunks arrived on time
         var outputChunksArrivedOnTimeCount = 0;
         // Enumerable of all delays between input and output chunks
-        for (var inputTimeStampIndex = 0;
-             inputTimeStampIndex < chunkInputTimesListLength;
-             inputTimeStampIndex++)
+        for (
+            var inputTimeStampIndex = 0;
+            inputTimeStampIndex < chunkInputTimesListLength;
+            inputTimeStampIndex++
+        )
         {
             try
             {
-                var delayMilliSeconds = (chunkOutputTimesList[inputTimeStampIndex]
-                                         - chunkInputTimesList[inputTimeStampIndex]).TotalMilliseconds;
+                var delayMilliSeconds = (
+                    chunkOutputTimesList[inputTimeStampIndex]
+                    - chunkInputTimesList[inputTimeStampIndex]
+                ).TotalMilliseconds;
 
                 // Cannot have negative delay
                 if (delayMilliSeconds < negativeDelayBufferMilliSecondsAsNegativeNumber)
                 {
                     throw new NegativeDelayException(
-                        $"Chunk delay is {delayMilliSeconds} milliseconds, delay cannot be a negative number" +
-                        $" below the negative delay buffer which is {negativeDelayBufferMilliSecondsAsNegativeNumber} milliseconds!" +
-                        " Issue with either the output timestamps or the input timestamps");
+                        $"Chunk delay is {delayMilliSeconds} milliseconds, delay cannot be a negative number"
+                            + $" below the negative delay buffer which is {negativeDelayBufferMilliSecondsAsNegativeNumber} milliseconds!"
+                            + " Issue with either the output timestamps or the input timestamps"
+                    );
                 }
 
-                if (delayMilliSeconds < 0 && delayMilliSeconds >= negativeDelayBufferMilliSecondsAsNegativeNumber)
+                if (
+                    delayMilliSeconds < 0
+                    && delayMilliSeconds >= negativeDelayBufferMilliSecondsAsNegativeNumber
+                )
                 {
-                    _traceStringBuilder.Append($"\nDelay is negative but falls within the negative delay buffer" +
-                            $" of {Configuration.MaximumNegativeDelayBufferMs!.Value} milliseconds," +
-                              $"delay is {delayMilliSeconds} milliseconds" +
-                                " treating delay as 0 millisecond delay\n");
+                    _traceStringBuilder.Append(
+                        $"\nDelay is negative but falls within the negative delay buffer"
+                            + $" of {Configuration.MaximumNegativeDelayBufferMs!.Value} milliseconds,"
+                            + $"delay is {delayMilliSeconds} milliseconds"
+                            + " treating delay as 0 millisecond delay\n"
+                    );
                     delayMilliSeconds = 0;
                 }
 
@@ -146,7 +184,6 @@ public class DelayByChunks: BaseAssertion<DelayByChunksConfiguration>
                 {
                     outputChunksArrivedOnTimeCount++;
                 }
-
             }
             catch (ArgumentOutOfRangeException e)
             {
@@ -168,17 +205,23 @@ public class DelayByChunks: BaseAssertion<DelayByChunksConfiguration>
     /// <param name="chunkTimeOption"> How to create the chunk's time according to the enum options </param>
     /// <typeparam name="T"></typeparam>
     /// <returns> List of chunk dateTimes </returns>
-    private static List<DateTime> GetListOfChunkTimes<T>(IReadOnlyList<DetailedData<T>> detailedDataList, 
-        int chunkSize, ChunkTimeOption chunkTimeOption)
+    private static List<DateTime> GetListOfChunkTimes<T>(
+        IReadOnlyList<DetailedData<T>> detailedDataList,
+        int chunkSize,
+        ChunkTimeOption chunkTimeOption
+    )
     {
-        const string onTimeStampExceptionMessage = "DetailedData item has no timestamp, can't calculate delay";
-        
-        if (chunkSize <= 0) throw new ArgumentException(
-            $"chunkSize cannot be 0 or less, the given chunkSize was {chunkSize}");
-        
+        const string onTimeStampExceptionMessage =
+            "DetailedData item has no timestamp, can't calculate delay";
+
+        if (chunkSize <= 0)
+            throw new ArgumentException(
+                $"chunkSize cannot be 0 or less, the given chunkSize was {chunkSize}"
+            );
+
         var listLength = detailedDataList.Count;
         var listOfChunkTimes = new List<DateTime>();
-        for(var listIndex = 0; listIndex < listLength; listIndex+= chunkSize)
+        for (var listIndex = 0; listIndex < listLength; listIndex += chunkSize)
         {
             if (listIndex + chunkSize > listLength)
             {
@@ -189,30 +232,38 @@ public class DelayByChunks: BaseAssertion<DelayByChunksConfiguration>
             switch (chunkTimeOption)
             {
                 case ChunkTimeOption.Average:
-                    var chunkList = new List<DateTime>(); 
-                    for(var chunkIndex = 0; chunkIndex < chunkSize; chunkIndex++)
+                    var chunkList = new List<DateTime>();
+                    for (var chunkIndex = 0; chunkIndex < chunkSize; chunkIndex++)
                     {
                         var itemInChunk = detailedDataList[listIndex + chunkIndex].Timestamp;
-                        chunkList.Add(itemInChunk ?? throw new NotSupportedException(onTimeStampExceptionMessage));
+                        chunkList.Add(
+                            itemInChunk
+                                ?? throw new NotSupportedException(onTimeStampExceptionMessage)
+                        );
                     }
-            
-                    chunkTime = DateTime.MinValue.AddSeconds(chunkList.Sum(time =>
-                        (time - DateTime.MinValue).TotalSeconds) / chunkList.Count);
+
+                    chunkTime = DateTime.MinValue.AddSeconds(
+                        chunkList.Sum(time => (time - DateTime.MinValue).TotalSeconds)
+                            / chunkList.Count
+                    );
                     break;
-                
+
                 case ChunkTimeOption.First:
-                    chunkTime = detailedDataList[listIndex].Timestamp ??
-                                throw new NotSupportedException(onTimeStampExceptionMessage);
+                    chunkTime =
+                        detailedDataList[listIndex].Timestamp
+                        ?? throw new NotSupportedException(onTimeStampExceptionMessage);
                     break;
-                
+
                 case ChunkTimeOption.Last:
-                    chunkTime = detailedDataList[listIndex + chunkSize - 1].Timestamp ?? 
-                                throw new NotSupportedException(onTimeStampExceptionMessage);
+                    chunkTime =
+                        detailedDataList[listIndex + chunkSize - 1].Timestamp
+                        ?? throw new NotSupportedException(onTimeStampExceptionMessage);
                     break;
-                
+
                 default:
                     throw new ArgumentOutOfRangeException(
-                        $"ChunkTimeOption {chunkTimeOption} is not supported");
+                        $"ChunkTimeOption {chunkTimeOption} is not supported"
+                    );
             }
             listOfChunkTimes.Add(chunkTime);
         }

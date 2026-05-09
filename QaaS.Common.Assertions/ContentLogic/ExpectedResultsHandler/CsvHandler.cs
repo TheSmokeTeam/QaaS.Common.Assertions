@@ -8,11 +8,13 @@ public class CsvHandler : IExpectedResultsHandler
 {
     /// <summary>
     /// Deserializes a csv file (only one file) which represented as a byte array into a list of dictionaries.
-    /// The key is the header of the column and the values are the values in each line. 
+    /// The key is the header of the column and the values are the values in each line.
     /// </summary>
     /// <param name="expectedResults"> The csv to deserialize </param>
     /// <returns> A list of dictionaries which represents the csv </returns>
-    public IList<Dictionary<string, object?>> DeserializeExpectedResults(IEnumerable<Data<object>> expectedResults)
+    public IList<Dictionary<string, object?>> DeserializeExpectedResults(
+        IEnumerable<Data<object>> expectedResults
+    )
     {
         var bytes = ExtractCsvFile(expectedResults);
 
@@ -51,7 +53,8 @@ public class CsvHandler : IExpectedResultsHandler
         if (extractedFile.Body is not byte[] bytes)
             throw new ArgumentException(
                 $"The expected results csv file has to be serialized, and be represented as a byte array.",
-                extractedFile.MetaData?.Storage?.Key);
+                extractedFile.MetaData?.Storage?.Key
+            );
         return bytes;
     }
 }

@@ -9,5 +9,7 @@ namespace QaaS.Common.Assertions.ContentLogic.ExpectedResultsHandler;
 /// </summary>
 public interface IExpectedResultsHandler
 {
-    IList<Dictionary<string, object?>> DeserializeExpectedResults(IEnumerable<Data<object>> expectedResults);
+    IList<Dictionary<string, object?>> DeserializeExpectedResults(
+        IEnumerable<Data<object>> expectedResults
+    );
 }

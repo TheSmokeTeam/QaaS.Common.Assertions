@@ -2,13 +2,12 @@
 
 namespace QaaS.Common.Assertions.ContentLogic.FieldValidation.Validators;
 
-public class ExactValueFieldValidator<TExactValueValidationConfig> : BaseFieldValidator<TExactValueValidationConfig>
+public class ExactValueFieldValidator<TExactValueValidationConfig>
+    : BaseFieldValidator<TExactValueValidationConfig>
     where TExactValueValidationConfig : ExactValueFieldValidatorConfig, new()
 {
-    public ExactValueFieldValidator(TExactValueValidationConfig exactValueValidationConfig) : base(
-        exactValueValidationConfig)
-    {
-    }
+    public ExactValueFieldValidator(TExactValueValidationConfig exactValueValidationConfig)
+        : base(exactValueValidationConfig) { }
 
     public override bool Validate(object? fieldValue, object? expectedValue)
     {

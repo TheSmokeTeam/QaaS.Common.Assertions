@@ -6,4 +6,3 @@ public class TestBinaryClass
     public string? StringProperty { get; set; }
     public double DoubleProperty { get; set; }
 }
-

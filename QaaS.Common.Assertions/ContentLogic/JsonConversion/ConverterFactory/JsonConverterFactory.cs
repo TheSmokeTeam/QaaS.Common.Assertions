@@ -12,7 +12,9 @@ public class JsonConverterFactory : IJsonConverterFactory
             JsonConverterType.Json => new JsonToJsonConverter(),
             JsonConverterType.Object => new ObjectToJsonConverter(),
             JsonConverterType.Xml => new XmlToJsonConverter(),
-            _ => throw new NotSupportedException($"Json converter of type {converterType} is not supported"),
+            _ => throw new NotSupportedException(
+                $"Json converter of type {converterType} is not supported"
+            ),
         };
     }
 }

@@ -20,7 +20,8 @@ namespace QaaS.Common.Assertions.Tests.SchemaLogicTests;
 [TestFixture]
 public class JsonOutputSchemaTests
 {
-    private const string ComplexValidJsonSchema = @"{
+    private const string ComplexValidJsonSchema =
+        @"{
         ""$schema"": ""http://json-schema.org/draft-07/schema#"",
         ""type"": ""object"",
         ""properties"": {
@@ -34,12 +35,14 @@ public class JsonOutputSchemaTests
         ""required"": [""name"", ""age"", ""roles""]
     }";
 
-    private const string ComplexJson = @"{
+    private const string ComplexJson =
+        @"{
         ""name"": ""Alice"",
         ""age"": 30,
         ""roles"": [""admin"", ""operator""]
     }";
-    private const string InvalidJsonSchema = @"{
+    private const string InvalidJsonSchema =
+        @"{
         ""$schema"": ""http://json-schema.org/draft-07/schema#"",
         ""id"": ""http://JschemaBuddy.net"",
         ""type"": ""object"",
@@ -61,190 +64,238 @@ public class JsonOutputSchemaTests
 
     private static IEnumerable<TestCaseData> _singleSessionAssertCaseSource = new[]
     {
-        new TestCaseData(0, ComplexJson, Array.Empty<string>(), true).SetName("0OutputsNoJsonSchemas"),
-        new TestCaseData(1, ComplexJson, Array.Empty<string>(), false).SetName("1OutputNoJsonSchemas"),
-        new TestCaseData(5, ComplexJson, Array.Empty<string>(), false).SetName("MultipleOutputsNoJsonSchemas"),
-
-        new TestCaseData(0, ComplexJson, new[] { ComplexValidJsonSchema }, true).SetName("0OutputsOneValidJsonSchema"),
-        new TestCaseData(1, ComplexJson, new[] { ComplexValidJsonSchema }, true).SetName("1OutputOneValidJsonSchema"),
-        new TestCaseData(5, ComplexJson, new[] { ComplexValidJsonSchema }, true).SetName("MultipleOutputsOneValidJsonSchema"),
-
-        new TestCaseData(0, ComplexJson, new[] { InvalidJsonSchema }, true).SetName("0OutputsOneInvalidJsonSchema"),
-        new TestCaseData(1, ComplexJson, new[] { InvalidJsonSchema }, false).SetName("1OutputOneInvalidJsonSchema"),
-        new TestCaseData(5, ComplexJson, new[] { InvalidJsonSchema }, false).SetName("MultipleOutputsOneInvalidJsonSchema"),
-
-        new TestCaseData(0, ComplexJson, new[] { ComplexValidJsonSchema, InvalidJsonSchema }, true).SetName("0OutputsTwoJsonSchemas1Valid1Invalid"),
-        new TestCaseData(1, ComplexJson, new[] { ComplexValidJsonSchema, InvalidJsonSchema }, true).SetName("1OutputTwoJsonSchemas1Valid1Invalid"),
-        new TestCaseData(5, ComplexJson, new[] { ComplexValidJsonSchema, InvalidJsonSchema }, true).SetName(
-            "MultipleOutputsTwoJsonSchemas1Valid1Invalid"),
-        
-        new TestCaseData(2000, "{}", new[] { InvalidJsonSchema }, false).SetName("TonsOfSimpleOutputsOneInvalidJsonSchema"),
+        new TestCaseData(0, ComplexJson, Array.Empty<string>(), true).SetName(
+            "0OutputsNoJsonSchemas"
+        ),
+        new TestCaseData(1, ComplexJson, Array.Empty<string>(), false).SetName(
+            "1OutputNoJsonSchemas"
+        ),
+        new TestCaseData(5, ComplexJson, Array.Empty<string>(), false).SetName(
+            "MultipleOutputsNoJsonSchemas"
+        ),
+        new TestCaseData(0, ComplexJson, new[] { ComplexValidJsonSchema }, true).SetName(
+            "0OutputsOneValidJsonSchema"
+        ),
+        new TestCaseData(1, ComplexJson, new[] { ComplexValidJsonSchema }, true).SetName(
+            "1OutputOneValidJsonSchema"
+        ),
+        new TestCaseData(5, ComplexJson, new[] { ComplexValidJsonSchema }, true).SetName(
+            "MultipleOutputsOneValidJsonSchema"
+        ),
+        new TestCaseData(0, ComplexJson, new[] { InvalidJsonSchema }, true).SetName(
+            "0OutputsOneInvalidJsonSchema"
+        ),
+        new TestCaseData(1, ComplexJson, new[] { InvalidJsonSchema }, false).SetName(
+            "1OutputOneInvalidJsonSchema"
+        ),
+        new TestCaseData(5, ComplexJson, new[] { InvalidJsonSchema }, false).SetName(
+            "MultipleOutputsOneInvalidJsonSchema"
+        ),
+        new TestCaseData(
+            0,
+            ComplexJson,
+            new[] { ComplexValidJsonSchema, InvalidJsonSchema },
+            true
+        ).SetName("0OutputsTwoJsonSchemas1Valid1Invalid"),
+        new TestCaseData(
+            1,
+            ComplexJson,
+            new[] { ComplexValidJsonSchema, InvalidJsonSchema },
+            true
+        ).SetName("1OutputTwoJsonSchemas1Valid1Invalid"),
+        new TestCaseData(
+            5,
+            ComplexJson,
+            new[] { ComplexValidJsonSchema, InvalidJsonSchema },
+            true
+        ).SetName("MultipleOutputsTwoJsonSchemas1Valid1Invalid"),
+        new TestCaseData(2000, "{}", new[] { InvalidJsonSchema }, false).SetName(
+            "TonsOfSimpleOutputsOneInvalidJsonSchema"
+        ),
     };
-    
+
     [Test, TestCaseSource(nameof(_singleSessionAssertCaseSource))]
-    public void
-        TestSingleSessionAssert_CallFunctionWithGivenNumbersOfOutputsAndSchemas_ShouldPassOrFailDependingOnParameters
-        (int numberOfOutputs, string json, string[] schemas, bool shouldPass)
+    public void TestSingleSessionAssert_CallFunctionWithGivenNumbersOfOutputsAndSchemas_ShouldPassOrFailDependingOnParameters(
+        int numberOfOutputs,
+        string json,
+        string[] schemas,
+        bool shouldPass
+    )
     {
         // Arrange
         const string outputName = "test";
-        
+
         var outputs = new List<DetailedData<object>>();
-        for(var outputNumber = 0; outputNumber < numberOfOutputs; outputNumber ++)
+        for (var outputNumber = 0; outputNumber < numberOfOutputs; outputNumber++)
         {
-            outputs.Add(new DetailedData<object>{Body = json});
+            outputs.Add(new DetailedData<object> { Body = json });
         }
-        var outputSource = new CommunicationData<object>
-        {
-            Name = outputName,
-            Data = outputs
-        };
-        var configurations = new ObjectOutputJsonSchemaConfiguration
-        {
-            OutputName = outputName
-        };
+        var outputSource = new CommunicationData<object> { Name = outputName, Data = outputs };
+        var configurations = new ObjectOutputJsonSchemaConfiguration { OutputName = outputName };
         var session = new SessionData
         {
             Name = "Id1",
-            Outputs = new List<CommunicationData<object>>{outputSource}
+            Outputs = new List<CommunicationData<object>> { outputSource },
         };
-        var sessionList = new List<SessionData>
-        {
-            session
-        }.ToImmutableList();
+        var sessionList = new List<SessionData> { session }.ToImmutableList();
         var assertion = new ObjectOutputJsonSchema
         {
             Context = new Context { Logger = Globals.Logger },
-            Configuration = configurations
+            Configuration = configurations,
         };
 
-        var schemasEnumerable = schemas.Select(schema => new Data<object> {Body = Encoding.UTF8.GetBytes(schema)});
-
-        
-        // Act
-        var result = assertion.Assert(sessionList, new List<DataSource> { new()
+        var schemasEnumerable = schemas.Select(schema => new Data<object>
         {
-            Name = "ExternalDataA",
-            Generator = new MockGenerator(schemasEnumerable)
-        } }.ToImmutableList());
-        
+            Body = Encoding.UTF8.GetBytes(schema),
+        });
+
+        // Act
+        var result = assertion.Assert(
+            sessionList,
+            new List<DataSource>
+            {
+                new() { Name = "ExternalDataA", Generator = new MockGenerator(schemasEnumerable) },
+            }.ToImmutableList()
+        );
+
         // Assert
         Assert.AreEqual(shouldPass, result);
     }
 
-    private static IEnumerable<TestCaseData> _testSingleSessionAssertionFailureDueToDataSourceCaseSource = new[]
-    {
-        new TestCaseData(new DataSource[]
+    private static IEnumerable<TestCaseData> _testSingleSessionAssertionFailureDueToDataSourceCaseSource =
+        new[]
         {
-            new ()
-            {
-                Name = "TestSource",
-                Generator = new MockGenerator(new Data<object>[]{new(){Body = new JObject()}})
-            }
-        }.ToImmutableList(), 
-            "Json schema TestSource:invalidItem was not given as a not null serialized external data, could not load it!")
-            .SetName("ExternalDataItemNotSerialized"),
-        new TestCaseData(new DataSource[]
-        {
-            new ()
-            {
-                Name = "TestSource",
-                Generator = new MockGenerator(new Data<object>[]{new(){Body = null}})
-            }
-        }.ToImmutableList(), 
-            "Json schema TestSource:invalidItem was not given as a not null serialized external data, could not load it!")
-            .SetName("ExternalDataItemNull"),
-        new TestCaseData(new DataSource[]
-        {
-            new ()
-            {
-                Name = "TestSource",
-                Generator = new MockGenerator(new Data<object>[]{new(){Body = new byte[]{1,1,2}}})
-            }
-        }.ToImmutableList(), 
-                "Unexpected character encountered while parsing value: \u0001. Path '', line 0, position 0.")
-            .SetName("ExternalDataItemNotValidJsonSchema")
-    };
-    
+            new TestCaseData(
+                new DataSource[]
+                {
+                    new()
+                    {
+                        Name = "TestSource",
+                        Generator = new MockGenerator(
+                            new Data<object>[] { new() { Body = new JObject() } }
+                        ),
+                    },
+                }.ToImmutableList(),
+                "Json schema TestSource:invalidItem was not given as a not null serialized external data, could not load it!"
+            ).SetName("ExternalDataItemNotSerialized"),
+            new TestCaseData(
+                new DataSource[]
+                {
+                    new()
+                    {
+                        Name = "TestSource",
+                        Generator = new MockGenerator(new Data<object>[] { new() { Body = null } }),
+                    },
+                }.ToImmutableList(),
+                "Json schema TestSource:invalidItem was not given as a not null serialized external data, could not load it!"
+            ).SetName("ExternalDataItemNull"),
+            new TestCaseData(
+                new DataSource[]
+                {
+                    new()
+                    {
+                        Name = "TestSource",
+                        Generator = new MockGenerator(
+                            new Data<object>[] { new() { Body = new byte[] { 1, 1, 2 } } }
+                        ),
+                    },
+                }.ToImmutableList(),
+                "Unexpected character encountered while parsing value: \u0001. Path '', line 0, position 0."
+            ).SetName("ExternalDataItemNotValidJsonSchema"),
+        };
+
     [Test, TestCaseSource(nameof(_testSingleSessionAssertionFailureDueToDataSourceCaseSource))]
-    public void
-        TestSingleSessionAssertionFailureDueToDataSource_CallFunctionWithDataSourceContainingAnItemThatIsNotAJsonSchema_ShouldThrowAnException
-        (ImmutableList<DataSource> invalidDataSources, string expectedExceptionMessage)
+    public void TestSingleSessionAssertionFailureDueToDataSource_CallFunctionWithDataSourceContainingAnItemThatIsNotAJsonSchema_ShouldThrowAnException(
+        ImmutableList<DataSource> invalidDataSources,
+        string expectedExceptionMessage
+    )
     {
         // Arrange
-        var configurations = new ObjectOutputJsonSchemaConfiguration
-        {
-            OutputName = "test"
-        };
+        var configurations = new ObjectOutputJsonSchemaConfiguration { OutputName = "test" };
         var assertion = new ObjectOutputJsonSchema
         {
             Context = new Context { Logger = Globals.Logger },
-            Configuration = configurations
+            Configuration = configurations,
         };
-        
+
         // Act + Assert
-        Assert.Throws<Exception>(() =>
-        {
-            try
+        Assert.Throws<Exception>(
+            () =>
             {
-                assertion.Assert(new List<SessionData>().ToImmutableList(), invalidDataSources);
-            }
-            catch (Exception e)
-            {
-                Globals.Logger.LogInformation("{Exception}", e);
-                throw new Exception(e.Message);
-            }
-        }, message: expectedExceptionMessage);
+                try
+                {
+                    assertion.Assert(new List<SessionData>().ToImmutableList(), invalidDataSources);
+                }
+                catch (Exception e)
+                {
+                    Globals.Logger.LogInformation("{Exception}", e);
+                    throw new Exception(e.Message);
+                }
+            },
+            message: expectedExceptionMessage
+        );
     }
 
-    private static IEnumerable<TestCaseData> _testSingleSessionAssertionFailureDueToOutputCaseSource = new[]
-    {
-        new TestCaseData(new List<object?>{null}).SetName("OneNullOutput"),
-        new TestCaseData(new List<object?>{null, null, null}).SetName("MultipleNullOutputs"),
-        new TestCaseData(new List<object?>{"not-json"}).SetName("SingleInvalidOutput"),
-        new TestCaseData(new List<object?>{"not-json", "not-json", "not-json"})
-            .SetName("MultipleInvalidOutputs"),
-    };
-    
+    private static IEnumerable<TestCaseData> _testSingleSessionAssertionFailureDueToOutputCaseSource =
+        new[]
+        {
+            new TestCaseData(new List<object?> { null }).SetName("OneNullOutput"),
+            new TestCaseData(new List<object?> { null, null, null }).SetName("MultipleNullOutputs"),
+            new TestCaseData(new List<object?> { "not-json" }).SetName("SingleInvalidOutput"),
+            new TestCaseData(new List<object?> { "not-json", "not-json", "not-json" }).SetName(
+                "MultipleInvalidOutputs"
+            ),
+        };
+
     [Test, TestCaseSource(nameof(_testSingleSessionAssertionFailureDueToOutputCaseSource))]
-    public void
-        TestSingleSessionAssertionFailureDueToOutput_CallFunctionWithOutputContainingAnItemThatCannotBeConvertedToAJson_ShouldThrowAnException
-        (List<object?> invalidOutputBodies)
+    public void TestSingleSessionAssertionFailureDueToOutput_CallFunctionWithOutputContainingAnItemThatCannotBeConvertedToAJson_ShouldThrowAnException(
+        List<object?> invalidOutputBodies
+    )
     {
         // Arrange
-        var configurations = new ObjectOutputJsonSchemaConfiguration
-        {
-            OutputName = "test"
-        };
+        var configurations = new ObjectOutputJsonSchemaConfiguration { OutputName = "test" };
         var assertion = new ObjectOutputJsonSchema
         {
             Context = new Context { Logger = Globals.Logger },
-            Configuration = configurations
+            Configuration = configurations,
         };
-        
+
         // Act + Assert
         var exception = Assert.Throws<Exception>(() =>
         {
             try
             {
-                assertion.Assert(new List<SessionData>
-                {
-                    new()
+                assertion.Assert(
+                    new List<SessionData>
                     {
-                        Outputs = new List<CommunicationData<object>>
+                        new()
                         {
-                            new ()
+                            Outputs = new List<CommunicationData<object>>
                             {
-                                Name = configurations.OutputName,
-                                Data = invalidOutputBodies.Select(body => new DetailedData<object>{Body = body}).ToList()
-                            }
-                        }
-                    }
-                }.ToImmutableList(), new List<DataSource> {new(){Name = "test", Generator = 
-                    new MockGenerator(new List<Data<object>>(){new()
+                                new()
+                                {
+                                    Name = configurations.OutputName,
+                                    Data = invalidOutputBodies
+                                        .Select(body => new DetailedData<object> { Body = body })
+                                        .ToList(),
+                                },
+                            },
+                        },
+                    }.ToImmutableList(),
+                    new List<DataSource>
                     {
-                        Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema)
-                    }})}}.ToImmutableList());
+                        new()
+                        {
+                            Name = "test",
+                            Generator = new MockGenerator(
+                                new List<Data<object>>()
+                                {
+                                    new() { Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema) },
+                                }
+                            ),
+                        },
+                    }.ToImmutableList()
+                );
             }
             catch (Exception e)
             {
@@ -269,34 +320,33 @@ public class JsonOutputSchemaTests
                     new()
                     {
                         Name = outputName,
-                        Data = new List<DetailedData<object>>
-                        {
-                            new() { Body = "null" }
-                        }
-                    }
-                }
-            }
+                        Data = new List<DetailedData<object>> { new() { Body = "null" } },
+                    },
+                },
+            },
         }.ToImmutableList();
         var assertion = new ObjectOutputJsonSchema
         {
             Context = new Context { Logger = Globals.Logger },
-            Configuration = new ObjectOutputJsonSchemaConfiguration
-            {
-                OutputName = outputName
-            }
+            Configuration = new ObjectOutputJsonSchemaConfiguration { OutputName = outputName },
         };
 
-        var result = assertion.Assert(sessionList, new List<DataSource>
-        {
-            new()
+        var result = assertion.Assert(
+            sessionList,
+            new List<DataSource>
             {
-                Name = "schema",
-                Generator = new MockGenerator(new List<Data<object>>
+                new()
                 {
-                    new() { Body = Encoding.UTF8.GetBytes(nullSchema) }
-                })
-            }
-        }.ToImmutableList());
+                    Name = "schema",
+                    Generator = new MockGenerator(
+                        new List<Data<object>>
+                        {
+                            new() { Body = Encoding.UTF8.GetBytes(nullSchema) },
+                        }
+                    ),
+                },
+            }.ToImmutableList()
+        );
 
         Assert.That(result, Is.True);
     }
@@ -309,10 +359,7 @@ public class JsonOutputSchemaTests
         var assertion = new ObjectOutputJsonSchema
         {
             Context = new Context { Logger = Globals.Logger },
-            Configuration = new ObjectOutputJsonSchemaConfiguration
-            {
-                OutputName = outputName
-            }
+            Configuration = new ObjectOutputJsonSchemaConfiguration { OutputName = outputName },
         };
 
         var sessionList = new List<SessionData>
@@ -326,11 +373,11 @@ public class JsonOutputSchemaTests
                         Name = outputName,
                         Data = new List<DetailedData<object>>
                         {
-                            new() { Body = @"{""name"":""Alice""}" }
-                        }
-                    }
-                }
-            }
+                            new() { Body = @"{""name"":""Alice""}" },
+                        },
+                    },
+                },
+            },
         }.ToImmutableList();
 
         var dataSources = new List<DataSource>
@@ -338,11 +385,13 @@ public class JsonOutputSchemaTests
             new()
             {
                 Name = "schema",
-                Generator = new MockGenerator(new List<Data<object>>
-                {
-                    new() { Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema) }
-                })
-            }
+                Generator = new MockGenerator(
+                    new List<Data<object>>
+                    {
+                        new() { Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema) },
+                    }
+                ),
+            },
         }.ToImmutableList();
 
         // Act
@@ -351,12 +400,21 @@ public class JsonOutputSchemaTests
         // Assert
         Assert.That(result, Is.False);
         Assert.That(assertion.AssertionMessage, Does.Contain("overall result ALL_FAIL"));
-        Assert.That(assertion.AssertionMessage, Does.Contain("Total items: 1. Passed: 0. Failed: 1."));
+        Assert.That(
+            assertion.AssertionMessage,
+            Does.Contain("Total items: 1. Passed: 0. Failed: 1.")
+        );
         Assert.That(assertion.AssertionMessage, Does.Contain("First failing item: index 0"));
         Assert.That(assertion.AssertionMessage, Does.Contain("Json Path: '$'"));
         Assert.That(assertion.AssertionMessage, Does.Contain("schema - 0"));
-        Assert.That(assertion.AssertionMessage, Does.Contain("Detailed per-item results are available in AssertionTrace."));
-        Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 0 failed validation"));
+        Assert.That(
+            assertion.AssertionMessage,
+            Does.Contain("Detailed per-item results are available in AssertionTrace.")
+        );
+        Assert.That(
+            assertion.AssertionTrace,
+            Does.Contain("Json output item at index 0 failed validation")
+        );
     }
 
     [Test]
@@ -367,10 +425,7 @@ public class JsonOutputSchemaTests
         var assertion = new ObjectOutputJsonSchema
         {
             Context = new Context { Logger = Globals.Logger },
-            Configuration = new ObjectOutputJsonSchemaConfiguration
-            {
-                OutputName = outputName
-            }
+            Configuration = new ObjectOutputJsonSchemaConfiguration { OutputName = outputName },
         };
 
         var sessionList = new List<SessionData>
@@ -385,11 +440,11 @@ public class JsonOutputSchemaTests
                         Data = new List<DetailedData<object>>
                         {
                             new() { Body = ComplexJson },
-                            new() { Body = ComplexJson }
-                        }
-                    }
-                }
-            }
+                            new() { Body = ComplexJson },
+                        },
+                    },
+                },
+            },
         }.ToImmutableList();
 
         var dataSources = new List<DataSource>
@@ -397,12 +452,14 @@ public class JsonOutputSchemaTests
             new()
             {
                 Name = "schema",
-                Generator = new MockGenerator(new List<Data<object>>
-                {
-                    new() { Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema) },
-                    new() { Body = Encoding.UTF8.GetBytes(InvalidJsonSchema) }
-                })
-            }
+                Generator = new MockGenerator(
+                    new List<Data<object>>
+                    {
+                        new() { Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema) },
+                        new() { Body = Encoding.UTF8.GetBytes(InvalidJsonSchema) },
+                    }
+                ),
+            },
         }.ToImmutableList();
 
         // Act
@@ -411,13 +468,31 @@ public class JsonOutputSchemaTests
         // Assert
         Assert.That(result, Is.True);
         Assert.That(assertion.AssertionMessage, Does.Contain("overall result ALL_PASS"));
-        Assert.That(assertion.AssertionMessage, Does.Contain("Total items: 2. Passed: 2. Failed: 0."));
-        Assert.That(assertion.AssertionMessage, Does.Contain("All output items matched at least one provided schema."));
-        Assert.That(assertion.AssertionMessage, Does.Contain("Detailed per-item results are available in AssertionTrace."));
+        Assert.That(
+            assertion.AssertionMessage,
+            Does.Contain("Total items: 2. Passed: 2. Failed: 0.")
+        );
+        Assert.That(
+            assertion.AssertionMessage,
+            Does.Contain("All output items matched at least one provided schema.")
+        );
+        Assert.That(
+            assertion.AssertionMessage,
+            Does.Contain("Detailed per-item results are available in AssertionTrace.")
+        );
         Assert.That(assertion.AssertionMessage, Does.Not.Contain("Validation failed"));
-        Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 0 passed validation"));
-        Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 1 passed validation"));
-        Assert.That(assertion.AssertionTrace, Does.Contain("Schema: schema - 1, Validation Errors:"));
+        Assert.That(
+            assertion.AssertionTrace,
+            Does.Contain("Json output item at index 0 passed validation")
+        );
+        Assert.That(
+            assertion.AssertionTrace,
+            Does.Contain("Json output item at index 1 passed validation")
+        );
+        Assert.That(
+            assertion.AssertionTrace,
+            Does.Contain("Schema: schema - 1, Validation Errors:")
+        );
     }
 
     [Test]
@@ -428,10 +503,7 @@ public class JsonOutputSchemaTests
         var assertion = new ObjectOutputJsonSchema
         {
             Context = new Context { Logger = Globals.Logger },
-            Configuration = new ObjectOutputJsonSchemaConfiguration
-            {
-                OutputName = outputName
-            }
+            Configuration = new ObjectOutputJsonSchemaConfiguration { OutputName = outputName },
         };
 
         var sessionList = new List<SessionData>
@@ -446,11 +518,11 @@ public class JsonOutputSchemaTests
                         Data = new List<DetailedData<object>>
                         {
                             new() { Body = ComplexJson },
-                            new() { Body = @"{""name"":""Alice""}" }
-                        }
-                    }
-                }
-            }
+                            new() { Body = @"{""name"":""Alice""}" },
+                        },
+                    },
+                },
+            },
         }.ToImmutableList();
 
         var dataSources = new List<DataSource>
@@ -458,11 +530,13 @@ public class JsonOutputSchemaTests
             new()
             {
                 Name = "schema",
-                Generator = new MockGenerator(new List<Data<object>>
-                {
-                    new() { Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema) }
-                })
-            }
+                Generator = new MockGenerator(
+                    new List<Data<object>>
+                    {
+                        new() { Body = Encoding.UTF8.GetBytes(ComplexValidJsonSchema) },
+                    }
+                ),
+            },
         }.ToImmutableList();
 
         // Act
@@ -471,11 +545,23 @@ public class JsonOutputSchemaTests
         // Assert
         Assert.That(result, Is.False);
         Assert.That(assertion.AssertionMessage, Does.Contain("overall result PARTIAL_PASS"));
-        Assert.That(assertion.AssertionMessage, Does.Contain("Total items: 2. Passed: 1. Failed: 1."));
+        Assert.That(
+            assertion.AssertionMessage,
+            Does.Contain("Total items: 2. Passed: 1. Failed: 1.")
+        );
         Assert.That(assertion.AssertionMessage, Does.Contain("First failing item: index 1"));
         Assert.That(assertion.AssertionMessage, Does.Contain("Json Path: '$'"));
-        Assert.That(assertion.AssertionMessage, Does.Contain("Detailed per-item results are available in AssertionTrace."));
-        Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 0 passed validation"));
-        Assert.That(assertion.AssertionTrace, Does.Contain("Json output item at index 1 failed validation"));
+        Assert.That(
+            assertion.AssertionMessage,
+            Does.Contain("Detailed per-item results are available in AssertionTrace.")
+        );
+        Assert.That(
+            assertion.AssertionTrace,
+            Does.Contain("Json output item at index 0 passed validation")
+        );
+        Assert.That(
+            assertion.AssertionTrace,
+            Does.Contain("Json output item at index 1 failed validation")
+        );
     }
 }

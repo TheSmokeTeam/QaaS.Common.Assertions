@@ -24,193 +24,222 @@ public class AssertionOutputContentByExpectedCsvResultsTests
         { "age", "20" },
         { "gender", "female" },
         {
-            "address", new JsonObject()
-            {
-                { "city", "Boston" }
-            }
-        }
+            "address",
+            new JsonObject() { { "city", "Boston" } }
+        },
     };
-    
+
     private static IEnumerable<TestCaseData> _singleSessionAssert = new[]
     {
-        new TestCaseData(Json, "resultsKey", "NAME,AGE,CITY,GENDER\nAlice,21,Boston,girl",
-                new Dictionary<string, FieldConfiguration>
+        new TestCaseData(
+            Json,
+            "resultsKey",
+            "NAME,AGE,CITY,GENDER\nAlice,21,Boston,girl",
+            new Dictionary<string, FieldConfiguration>
+            {
                 {
+                    "NAME",
+                    new FieldConfiguration
                     {
-                        "NAME", new FieldConfiguration
+                        Path = "$.name",
+                        FieldValidationConfig = new FieldValidationConfig
                         {
-                            Path = "$.name",
-                            FieldValidationConfig = new FieldValidationConfig
-                            {
-                                Type = FieldValidationType.ExactValue
-                            }
-                        }
-                    },
-                    {
-                        "AGE", new FieldConfiguration
-                        {
-                            Path = "$.age",
-                            FieldValidationConfig = new FieldValidationConfig
-                            {
-                                Type = FieldValidationType.ErrorRange,
-                                ErrorRange = new ErrorRangeFieldValidatorConfig
-                                {
-                                    ErrorRange = 2
-                                },
-                            }
-                        }
-                    },
-                    {
-                        "GENDER", new FieldConfiguration
-                        {
-                            Path = "$.gender",
-                            FieldValidationConfig = new FieldValidationConfig
-                            {
-                                Type = FieldValidationType.ExactOverrideValue,
-                                ExactOverrideValue = new ExactOverrideValueFieldValidatorConfig()
-                                {
-                                    OverrideValue = "female"
-                                },
-                            }
-                        }
-                    },
-                    {
-                        "CITY", new FieldConfiguration
-                        {
-                            Path = "$.address.city",
-                            FieldValidationConfig = new FieldValidationConfig
-                            {
-                                Type = FieldValidationType.ExactValue,
-                            }
-                        }
+                            Type = FieldValidationType.ExactValue,
+                        },
                     }
-                }, true,"100% match","")
-            .SetName("ValidOutput_ShouldPass"),
-        new TestCaseData(Json, "resultsKey", "NAME,AGE,CITY,GENDER\nAlice,21,Boston,girl",
-                new Dictionary<string, FieldConfiguration>
+                },
                 {
+                    "AGE",
+                    new FieldConfiguration
                     {
-                        "NAME", new FieldConfiguration
+                        Path = "$.age",
+                        FieldValidationConfig = new FieldValidationConfig
                         {
-                            Path = "$.name",
-                            FieldValidationConfig = new FieldValidationConfig
-                            {
-                                Type = FieldValidationType.ExactValue
-                            }
-                        }
-                    },
-                    {
-                        "AGE", new FieldConfiguration
-                        {
-                            Path = "$.age",
-                            FieldValidationConfig = new FieldValidationConfig
-                            {
-                                Type = FieldValidationType.ErrorRange,
-                                ErrorRange = new ErrorRangeFieldValidatorConfig
-                                {
-                                    ErrorRange = 0.5
-                                },
-                            }
-                        }
-                    },
-                    {
-                        "GENDER", new FieldConfiguration
-                        {
-                            Path = "$.gender",
-                            FieldValidationConfig = new FieldValidationConfig
-                            {
-                                Type = FieldValidationType.ExactOverrideValue,
-                                ExactOverrideValue = new ExactOverrideValueFieldValidatorConfig()
-                                {
-                                    OverrideValue = "female"
-                                },
-                            }
-                        }
-                    },
-                    {
-                        "CITY", new FieldConfiguration
-                        {
-                            Path = "$.address.city",
-                            FieldValidationConfig = new FieldValidationConfig
-                            {
-                                Type = FieldValidationType.ExactValue,
-                            }
-                        }
+                            Type = FieldValidationType.ErrorRange,
+                            ErrorRange = new ErrorRangeFieldValidatorConfig { ErrorRange = 2 },
+                        },
                     }
-                }, false,"0% match","Invalid fields: AGE")
-            .SetName("FieldOutOfErrorRange_ShouldFail"),
-        new TestCaseData(Json, "resultsKey", "NAME,AGE,CITY,GENDER\nAlice,21,Boston,girl",
-                new Dictionary<string, FieldConfiguration>
+                },
                 {
+                    "GENDER",
+                    new FieldConfiguration
                     {
-                        "NAME", new FieldConfiguration
+                        Path = "$.gender",
+                        FieldValidationConfig = new FieldValidationConfig
                         {
-                            Path = "$.name",
-                            FieldValidationConfig = new FieldValidationConfig
+                            Type = FieldValidationType.ExactOverrideValue,
+                            ExactOverrideValue = new ExactOverrideValueFieldValidatorConfig()
                             {
-                                Type = FieldValidationType.ExactValue
-                            }
-                        }
-                    },
-                    {
-                        "AGE", new FieldConfiguration
-                        {
-                            Path = "$.age",
-                            FieldValidationConfig = new FieldValidationConfig
-                            {
-                                Type = FieldValidationType.ErrorRange,
-                                ErrorRange = new ErrorRangeFieldValidatorConfig
-                                {
-                                    ErrorRange = 5
-                                },
-                            }
-                        }
-                    },
-                    {
-                        "GENDER", new FieldConfiguration
-                        {
-                            Path = "$.gender",
-                            FieldValidationConfig = new FieldValidationConfig
-                            {
-                                Type = FieldValidationType.ExactOverrideValue,
-                                ExactOverrideValue = new ExactOverrideValueFieldValidatorConfig()
-                                {
-                                    OverrideValue = "male"
-                                },
-                            }
-                        }
-                    },
-                    {
-                        "CITY", new FieldConfiguration
-                        {
-                            Path = "$.address.city",
-                            FieldValidationConfig = new FieldValidationConfig
-                            {
-                                Type = FieldValidationType.ExactValue,
-                            }
-                        }
+                                OverrideValue = "female",
+                            },
+                        },
                     }
-                }, false,"0% match","Invalid fields: GENDER")
-            .SetName("FieldNotMatchingOverrideValue_ShouldFail")
+                },
+                {
+                    "CITY",
+                    new FieldConfiguration
+                    {
+                        Path = "$.address.city",
+                        FieldValidationConfig = new FieldValidationConfig
+                        {
+                            Type = FieldValidationType.ExactValue,
+                        },
+                    }
+                },
+            },
+            true,
+            "100% match",
+            ""
+        ).SetName("ValidOutput_ShouldPass"),
+        new TestCaseData(
+            Json,
+            "resultsKey",
+            "NAME,AGE,CITY,GENDER\nAlice,21,Boston,girl",
+            new Dictionary<string, FieldConfiguration>
+            {
+                {
+                    "NAME",
+                    new FieldConfiguration
+                    {
+                        Path = "$.name",
+                        FieldValidationConfig = new FieldValidationConfig
+                        {
+                            Type = FieldValidationType.ExactValue,
+                        },
+                    }
+                },
+                {
+                    "AGE",
+                    new FieldConfiguration
+                    {
+                        Path = "$.age",
+                        FieldValidationConfig = new FieldValidationConfig
+                        {
+                            Type = FieldValidationType.ErrorRange,
+                            ErrorRange = new ErrorRangeFieldValidatorConfig { ErrorRange = 0.5 },
+                        },
+                    }
+                },
+                {
+                    "GENDER",
+                    new FieldConfiguration
+                    {
+                        Path = "$.gender",
+                        FieldValidationConfig = new FieldValidationConfig
+                        {
+                            Type = FieldValidationType.ExactOverrideValue,
+                            ExactOverrideValue = new ExactOverrideValueFieldValidatorConfig()
+                            {
+                                OverrideValue = "female",
+                            },
+                        },
+                    }
+                },
+                {
+                    "CITY",
+                    new FieldConfiguration
+                    {
+                        Path = "$.address.city",
+                        FieldValidationConfig = new FieldValidationConfig
+                        {
+                            Type = FieldValidationType.ExactValue,
+                        },
+                    }
+                },
+            },
+            false,
+            "0% match",
+            "Invalid fields: AGE"
+        ).SetName("FieldOutOfErrorRange_ShouldFail"),
+        new TestCaseData(
+            Json,
+            "resultsKey",
+            "NAME,AGE,CITY,GENDER\nAlice,21,Boston,girl",
+            new Dictionary<string, FieldConfiguration>
+            {
+                {
+                    "NAME",
+                    new FieldConfiguration
+                    {
+                        Path = "$.name",
+                        FieldValidationConfig = new FieldValidationConfig
+                        {
+                            Type = FieldValidationType.ExactValue,
+                        },
+                    }
+                },
+                {
+                    "AGE",
+                    new FieldConfiguration
+                    {
+                        Path = "$.age",
+                        FieldValidationConfig = new FieldValidationConfig
+                        {
+                            Type = FieldValidationType.ErrorRange,
+                            ErrorRange = new ErrorRangeFieldValidatorConfig { ErrorRange = 5 },
+                        },
+                    }
+                },
+                {
+                    "GENDER",
+                    new FieldConfiguration
+                    {
+                        Path = "$.gender",
+                        FieldValidationConfig = new FieldValidationConfig
+                        {
+                            Type = FieldValidationType.ExactOverrideValue,
+                            ExactOverrideValue = new ExactOverrideValueFieldValidatorConfig()
+                            {
+                                OverrideValue = "male",
+                            },
+                        },
+                    }
+                },
+                {
+                    "CITY",
+                    new FieldConfiguration
+                    {
+                        Path = "$.address.city",
+                        FieldValidationConfig = new FieldValidationConfig
+                        {
+                            Type = FieldValidationType.ExactValue,
+                        },
+                    }
+                },
+            },
+            false,
+            "0% match",
+            "Invalid fields: GENDER"
+        ).SetName("FieldNotMatchingOverrideValue_ShouldFail"),
     };
 
     [Test, TestCaseSource(nameof(_singleSessionAssert))]
-    public void TestAssertionResultsAsCsv_AssertsThatOutputMatchedResults_ShouldAssertTrueIfMatching(JsonNode json,
-        string resultsMetaDataStorageKey, string resultsAsCsvContent,
-        Dictionary<string, FieldConfiguration> mapping, bool shouldPass, string expectedMessage,string expectedTrace)
+    public void TestAssertionResultsAsCsv_AssertsThatOutputMatchedResults_ShouldAssertTrueIfMatching(
+        JsonNode json,
+        string resultsMetaDataStorageKey,
+        string resultsAsCsvContent,
+        Dictionary<string, FieldConfiguration> mapping,
+        bool shouldPass,
+        string expectedMessage,
+        string expectedTrace
+    )
     {
         // Arrange
         var jsons = new List<JsonNode> { json };
-        var sessionDataList = QaaSSdkObjectsUtils.BuildSessionList(jsons, OutputName).ToImmutableList();
-        var externalDataList = QaaSSdkObjectsUtils.BuildDataSourceList(resultsMetaDataStorageKey, resultsAsCsvContent)
+        var sessionDataList = QaaSSdkObjectsUtils
+            .BuildSessionList(jsons, OutputName)
+            .ToImmutableList();
+        var externalDataList = QaaSSdkObjectsUtils
+            .BuildDataSourceList(resultsMetaDataStorageKey, resultsAsCsvContent)
             .ToImmutableList();
         var assertion = new OutputContentByExpectedCsvResults()
         {
             Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
             {
-                OutputName = OutputName, ResultsMetaDataStorageKey = resultsMetaDataStorageKey,
-                ColumnNameToFieldPathMap = mapping
-            }
+                OutputName = OutputName,
+                ResultsMetaDataStorageKey = resultsMetaDataStorageKey,
+                ColumnNameToFieldPathMap = mapping,
+            },
         };
 
         // Act
@@ -222,11 +251,10 @@ public class AssertionOutputContentByExpectedCsvResultsTests
         Assert.That(assertion.AssertionTrace!.Contains(expectedTrace));
     }
 
-
     [Test, TestCase("No DataSource was provided for the assertion")]
-    public void
-        TestGetResultsDataSource_GetsTheDataSourceOfResultsFromDataSourcesList_ThrowsExceptionIfNoDataSourcesProvided(
-            string expectedExceptionMessage)
+    public void TestGetResultsDataSource_GetsTheDataSourceOfResultsFromDataSourcesList_ThrowsExceptionIfNoDataSourcesProvided(
+        string expectedExceptionMessage
+    )
     {
         // Arrange
         var sessionDataList = new List<SessionData>().ToImmutableList();
@@ -234,34 +262,41 @@ public class AssertionOutputContentByExpectedCsvResultsTests
         var assertion = new OutputContentByExpectedCsvResults();
 
         // Act + Assert
-        var ex = Assert.Throws<ArgumentException>(() => assertion.Assert(sessionDataList, externalDataList));
+        var ex = Assert.Throws<ArgumentException>(() =>
+            assertion.Assert(sessionDataList, externalDataList)
+        );
         if (ex != null)
             Assert.That(ex.Message.Contains(expectedExceptionMessage));
         else
             Assert.Fail("No exception was thrown");
     }
 
-
     [Test, TestCase("key1", "key2", "does not exist in the DataSource list")]
-    public void
-        TestLoadResultsContent_LoadsTheResultsContentFromDataSourcesListByTheKeyOfTheStorageMetadata_ThrowsExceptionIfNoDataSourcesHasThatKey(
-            string actualFileName, string resultsMetaDataStorageKey,
-            string expectedExceptionMessage)
+    public void TestLoadResultsContent_LoadsTheResultsContentFromDataSourcesListByTheKeyOfTheStorageMetadata_ThrowsExceptionIfNoDataSourcesHasThatKey(
+        string actualFileName,
+        string resultsMetaDataStorageKey,
+        string expectedExceptionMessage
+    )
     {
         // Arrange
         var sessionDataList = new List<SessionData>().ToImmutableList();
-        var externalDataList = QaaSSdkObjectsUtils.BuildDataSourceList(actualFileName, "").ToImmutableList();
+        var externalDataList = QaaSSdkObjectsUtils
+            .BuildDataSourceList(actualFileName, "")
+            .ToImmutableList();
         var assertion = new OutputContentByExpectedCsvResults()
         {
             Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
             {
-                OutputName = OutputName, ResultsMetaDataStorageKey = resultsMetaDataStorageKey,
-                ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>()
-            }
+                OutputName = OutputName,
+                ResultsMetaDataStorageKey = resultsMetaDataStorageKey,
+                ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>(),
+            },
         };
 
         // Act + Assert
-        var ex = Assert.Throws<ArgumentException>(() => assertion.Assert(sessionDataList, externalDataList));
+        var ex = Assert.Throws<ArgumentException>(() =>
+            assertion.Assert(sessionDataList, externalDataList)
+        );
         Console.WriteLine(ex);
         if (ex != null)
             Assert.That(ex.Message.Contains(expectedExceptionMessage));
@@ -270,9 +305,15 @@ public class AssertionOutputContentByExpectedCsvResultsTests
     [Test]
     public void TestAssertionResultsAsCsv_WhenExpectedAndActualCountsDoNotMatch_ShouldReturnFalse()
     {
-        var sessionDataList = QaaSSdkObjectsUtils.BuildSessionList(new List<JsonNode?> { Json }, OutputName).ToImmutableList();
-        var externalDataList = QaaSSdkObjectsUtils.BuildDataSourceList("resultsKey",
-            "NAME,AGE,CITY,GENDER\nAlice,21,Boston,girl\nAlice,21,Boston,girl").ToImmutableList();
+        var sessionDataList = QaaSSdkObjectsUtils
+            .BuildSessionList(new List<JsonNode?> { Json }, OutputName)
+            .ToImmutableList();
+        var externalDataList = QaaSSdkObjectsUtils
+            .BuildDataSourceList(
+                "resultsKey",
+                "NAME,AGE,CITY,GENDER\nAlice,21,Boston,girl\nAlice,21,Boston,girl"
+            )
+            .ToImmutableList();
         var assertion = new OutputContentByExpectedCsvResults
         {
             Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
@@ -282,14 +323,18 @@ public class AssertionOutputContentByExpectedCsvResultsTests
                 ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>
                 {
                     {
-                        "NAME", new FieldConfiguration
+                        "NAME",
+                        new FieldConfiguration
                         {
                             Path = "$.name",
-                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                            FieldValidationConfig = new FieldValidationConfig
+                            {
+                                Type = FieldValidationType.ExactValue,
+                            },
                         }
-                    }
-                }
-            }
+                    },
+                },
+            },
         };
 
         var result = assertion.Assert(sessionDataList, externalDataList);
@@ -301,9 +346,12 @@ public class AssertionOutputContentByExpectedCsvResultsTests
     [Test]
     public void TestAssertionResultsAsCsv_WhenOutputItemIsNull_ShouldCountAsEmptyItemAndFail()
     {
-        var sessionDataList = QaaSSdkObjectsUtils.BuildSessionList(new List<JsonNode?> { null }, OutputName).ToImmutableList();
-        var externalDataList = QaaSSdkObjectsUtils.BuildDataSourceList("resultsKey",
-            "NAME\nAlice").ToImmutableList();
+        var sessionDataList = QaaSSdkObjectsUtils
+            .BuildSessionList(new List<JsonNode?> { null }, OutputName)
+            .ToImmutableList();
+        var externalDataList = QaaSSdkObjectsUtils
+            .BuildDataSourceList("resultsKey", "NAME\nAlice")
+            .ToImmutableList();
         var assertion = new OutputContentByExpectedCsvResults
         {
             Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
@@ -313,14 +361,18 @@ public class AssertionOutputContentByExpectedCsvResultsTests
                 ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>
                 {
                     {
-                        "NAME", new FieldConfiguration
+                        "NAME",
+                        new FieldConfiguration
                         {
                             Path = "$.name",
-                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                            FieldValidationConfig = new FieldValidationConfig
+                            {
+                                Type = FieldValidationType.ExactValue,
+                            },
                         }
-                    }
-                }
-            }
+                    },
+                },
+            },
         };
 
         var result = assertion.Assert(sessionDataList, externalDataList);
@@ -337,18 +389,21 @@ public class AssertionOutputContentByExpectedCsvResultsTests
         {
             { "name", "Bob" },
             { "age", "31" },
-            { "city", "Paris" }
+            { "city", "Paris" },
         };
         var secondJson = new JsonObject
         {
             { "name", "Alice" },
             { "age", "20" },
-            { "city", "Boston" }
+            { "city", "Boston" },
         };
 
-        var sessionDataList = QaaSSdkObjectsUtils.BuildSessionList([firstJson, secondJson], OutputName).ToImmutableList();
-        var externalDataList = QaaSSdkObjectsUtils.BuildDataSourceList("resultsKey",
-            "NAME,AGE,CITY\nAlice,20,Boston\nBob,31,Paris").ToImmutableList();
+        var sessionDataList = QaaSSdkObjectsUtils
+            .BuildSessionList([firstJson, secondJson], OutputName)
+            .ToImmutableList();
+        var externalDataList = QaaSSdkObjectsUtils
+            .BuildDataSourceList("resultsKey", "NAME,AGE,CITY\nAlice,20,Boston\nBob,31,Paris")
+            .ToImmutableList();
         var assertion = new OutputContentByExpectedCsvResults
         {
             Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
@@ -359,28 +414,40 @@ public class AssertionOutputContentByExpectedCsvResultsTests
                 ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>
                 {
                     {
-                        "NAME", new FieldConfiguration
+                        "NAME",
+                        new FieldConfiguration
                         {
                             Path = "$.name",
-                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                            FieldValidationConfig = new FieldValidationConfig
+                            {
+                                Type = FieldValidationType.ExactValue,
+                            },
                         }
                     },
                     {
-                        "AGE", new FieldConfiguration
+                        "AGE",
+                        new FieldConfiguration
                         {
                             Path = "$.age",
-                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                            FieldValidationConfig = new FieldValidationConfig
+                            {
+                                Type = FieldValidationType.ExactValue,
+                            },
                         }
                     },
                     {
-                        "CITY", new FieldConfiguration
+                        "CITY",
+                        new FieldConfiguration
                         {
                             Path = "$.city",
-                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                            FieldValidationConfig = new FieldValidationConfig
+                            {
+                                Type = FieldValidationType.ExactValue,
+                            },
                         }
-                    }
-                }
-            }
+                    },
+                },
+            },
         };
 
         var result = assertion.Assert(sessionDataList, externalDataList);
@@ -397,18 +464,21 @@ public class AssertionOutputContentByExpectedCsvResultsTests
         {
             { "name", "Bob" },
             { "age", "31" },
-            { "city", "Paris" }
+            { "city", "Paris" },
         };
         var secondJson = new JsonObject
         {
             { "name", "Alice" },
             { "age", "20" },
-            { "city", "Boston" }
+            { "city", "Boston" },
         };
 
-        var sessionDataList = QaaSSdkObjectsUtils.BuildSessionList([firstJson, secondJson], OutputName).ToImmutableList();
-        var externalDataList = QaaSSdkObjectsUtils.BuildDataSourceList("resultsKey",
-            "NAME,AGE,CITY\nAlice,20,Boston\nBob,31,Paris").ToImmutableList();
+        var sessionDataList = QaaSSdkObjectsUtils
+            .BuildSessionList([firstJson, secondJson], OutputName)
+            .ToImmutableList();
+        var externalDataList = QaaSSdkObjectsUtils
+            .BuildDataSourceList("resultsKey", "NAME,AGE,CITY\nAlice,20,Boston\nBob,31,Paris")
+            .ToImmutableList();
         var assertion = new OutputContentByExpectedCsvResults
         {
             Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
@@ -418,28 +488,40 @@ public class AssertionOutputContentByExpectedCsvResultsTests
                 ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>
                 {
                     {
-                        "NAME", new FieldConfiguration
+                        "NAME",
+                        new FieldConfiguration
                         {
                             Path = "$.name",
-                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                            FieldValidationConfig = new FieldValidationConfig
+                            {
+                                Type = FieldValidationType.ExactValue,
+                            },
                         }
                     },
                     {
-                        "AGE", new FieldConfiguration
+                        "AGE",
+                        new FieldConfiguration
                         {
                             Path = "$.age",
-                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                            FieldValidationConfig = new FieldValidationConfig
+                            {
+                                Type = FieldValidationType.ExactValue,
+                            },
                         }
                     },
                     {
-                        "CITY", new FieldConfiguration
+                        "CITY",
+                        new FieldConfiguration
                         {
                             Path = "$.city",
-                            FieldValidationConfig = new FieldValidationConfig { Type = FieldValidationType.ExactValue }
+                            FieldValidationConfig = new FieldValidationConfig
+                            {
+                                Type = FieldValidationType.ExactValue,
+                            },
                         }
-                    }
-                }
-            }
+                    },
+                },
+            },
         };
 
         var result = assertion.Assert(sessionDataList, externalDataList);
@@ -451,18 +533,15 @@ public class AssertionOutputContentByExpectedCsvResultsTests
     [Test]
     public void TestAssertionResultsAsCsv_WhenBroadValidatorMatchesMultipleRows_ShouldUseNonGreedyAssignment()
     {
-        var firstJson = new JsonObject
-        {
-            { "age", "15" }
-        };
-        var secondJson = new JsonObject
-        {
-            { "age", "9" }
-        };
+        var firstJson = new JsonObject { { "age", "15" } };
+        var secondJson = new JsonObject { { "age", "9" } };
 
-        var sessionDataList = QaaSSdkObjectsUtils.BuildSessionList([firstJson, secondJson], OutputName).ToImmutableList();
-        var externalDataList = QaaSSdkObjectsUtils.BuildDataSourceList("resultsKey",
-            "AGE\n10\n20").ToImmutableList();
+        var sessionDataList = QaaSSdkObjectsUtils
+            .BuildSessionList([firstJson, secondJson], OutputName)
+            .ToImmutableList();
+        var externalDataList = QaaSSdkObjectsUtils
+            .BuildDataSourceList("resultsKey", "AGE\n10\n20")
+            .ToImmutableList();
         var assertion = new OutputContentByExpectedCsvResults
         {
             Configuration = new OutputContentByExpectedResultsAsCsvConfiguration
@@ -473,21 +552,19 @@ public class AssertionOutputContentByExpectedCsvResultsTests
                 ColumnNameToFieldPathMap = new Dictionary<string, FieldConfiguration>
                 {
                     {
-                        "AGE", new FieldConfiguration
+                        "AGE",
+                        new FieldConfiguration
                         {
                             Path = "$.age",
                             FieldValidationConfig = new FieldValidationConfig
                             {
                                 Type = FieldValidationType.ErrorRange,
-                                ErrorRange = new ErrorRangeFieldValidatorConfig
-                                {
-                                    ErrorRange = 10
-                                }
-                            }
+                                ErrorRange = new ErrorRangeFieldValidatorConfig { ErrorRange = 10 },
+                            },
                         }
-                    }
-                }
-            }
+                    },
+                },
+            },
         };
 
         var result = assertion.Assert(sessionDataList, externalDataList);

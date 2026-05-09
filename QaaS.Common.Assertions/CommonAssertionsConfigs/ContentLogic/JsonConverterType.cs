@@ -4,5 +4,5 @@ public enum JsonConverterType
 {
     Json,
     Xml,
-    Object
+    Object,
 }

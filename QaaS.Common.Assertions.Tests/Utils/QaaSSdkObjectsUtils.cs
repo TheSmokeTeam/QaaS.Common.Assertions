@@ -13,7 +13,10 @@ namespace QaaS.Common.Assertions.Tests.Utils;
 
 internal static class QaaSSdkObjectsUtils
 {
-    public static IEnumerable<SessionData> BuildSessionList(IEnumerable<JsonNode?> jsons, string outputName)
+    public static IEnumerable<SessionData> BuildSessionList(
+        IEnumerable<JsonNode?> jsons,
+        string outputName
+    )
     {
         return new List<SessionData>
         {
@@ -24,32 +27,39 @@ internal static class QaaSSdkObjectsUtils
                     new()
                     {
                         Name = outputName,
-                        Data = jsons.Select(json => new DetailedData<object> { Body = json }).ToList()
-                    }
-                }
-            }
+                        Data = jsons
+                            .Select(json => new DetailedData<object> { Body = json })
+                            .ToList(),
+                    },
+                },
+            },
         };
     }
 
-    public static IEnumerable<DataSource> BuildDataSourceList(string fileName, string csvFileContent)
+    public static IEnumerable<DataSource> BuildDataSourceList(
+        string fileName,
+        string csvFileContent
+    )
     {
         return new List<DataSource>
         {
             new()
             {
                 Name = "DataSource:)",
-                Generator = new MockGenerator(new List<Data<object>>
-                {
-                    new()
+                Generator = new MockGenerator(
+                    new List<Data<object>>
                     {
-                        MetaData = new MetaData { Storage = new Storage { Key = fileName } },
-                        Body = Encoding.UTF8.GetBytes(csvFileContent)
+                        new()
+                        {
+                            MetaData = new MetaData { Storage = new Storage { Key = fileName } },
+                            Body = Encoding.UTF8.GetBytes(csvFileContent),
+                        },
                     }
-                })
-            }
+                ),
+            },
         };
     }
-    
+
     public static IEnumerable<DataSource> BuildDataSourceList(object? content)
     {
         return new List<DataSource>
@@ -57,14 +67,8 @@ internal static class QaaSSdkObjectsUtils
             new()
             {
                 Name = "DataSource",
-                Generator = new MockGenerator(new List<Data<object>>
-                {
-                    new()
-                    {
-                        Body = content
-                    },
-                })
-            }
+                Generator = new MockGenerator(new List<Data<object>> { new() { Body = content } }),
+            },
         };
     }
 }

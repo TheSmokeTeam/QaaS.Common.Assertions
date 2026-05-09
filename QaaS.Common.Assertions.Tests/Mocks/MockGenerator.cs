@@ -12,10 +12,13 @@ namespace QaaS.Common.Assertions.Tests.Mocks;
 
 public class MockGenerator(IEnumerable<Data<object>> dataToGenerate) : IGenerator
 {
-    public List<ValidationResult>? LoadAndValidateConfiguration(IConfiguration configuration) => new();
-    
+    public List<ValidationResult>? LoadAndValidateConfiguration(IConfiguration configuration) =>
+        new();
+
     public Context Context { get; set; } = null!;
 
-    public IEnumerable<Data<object>> Generate(IImmutableList<SessionData> sessionDataList,
-        IImmutableList<DataSource> dataSourceList) => dataToGenerate;
+    public IEnumerable<Data<object>> Generate(
+        IImmutableList<SessionData> sessionDataList,
+        IImmutableList<DataSource> dataSourceList
+    ) => dataToGenerate;
 }

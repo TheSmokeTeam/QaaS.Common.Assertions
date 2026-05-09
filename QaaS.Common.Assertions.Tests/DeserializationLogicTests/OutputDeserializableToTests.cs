@@ -18,13 +18,11 @@ namespace QaaS.Common.Assertions.Tests.DeserializationLogicTests;
 [TestFixture]
 public class OutputDeserializableToTests
 {
-    [Test,
-     TestCase(0, true),
-     TestCase(1, false),
-     TestCase(10, false)]
-    public void
-        TestAssertSingleSession_CallAssertFunctionWithASingleSessionWithDeserializableItems_ShouldReturnExpectedAssertionResult
-        (int numberOfOutputs, bool shouldPassAssertion)
+    [Test, TestCase(0, true), TestCase(1, false), TestCase(10, false)]
+    public void TestAssertSingleSession_CallAssertFunctionWithASingleSessionWithDeserializableItems_ShouldReturnExpectedAssertionResult(
+        int numberOfOutputs,
+        bool shouldPassAssertion
+    )
     {
         // Arrange
         const string outputName = "test";
@@ -35,37 +33,28 @@ public class OutputDeserializableToTests
             outputs.Add(new DetailedData<object> { Body = Array.Empty<byte>() });
         }
 
-        var outputSource = new CommunicationData<object>
-        {
-            Name = outputName,
-            Data = outputs
-        };
+        var outputSource = new CommunicationData<object> { Name = outputName, Data = outputs };
         var configurations = new OutputDeserializableToConfiguration
         {
             OutputName = outputName,
-            Deserialize = new DeserializeConfig
-            {
-                Deserializer = SerializationType.Json
-            }
+            Deserialize = new DeserializeConfig { Deserializer = SerializationType.Json },
         };
         var session = new SessionData
         {
             Name = "Id1",
-            Outputs = new List<CommunicationData<object>> { outputSource }
+            Outputs = new List<CommunicationData<object>> { outputSource },
         };
 
-        var sessionList = new List<SessionData>
-        {
-            session
-        }.ToImmutableList();
+        var sessionList = new List<SessionData> { session }.ToImmutableList();
 
-
-        var assertion = new OutputDeserializableToMock(shouldPassAssertion
-            ? new MockDeserializerWorksWithAllData()
-            : new MockDeserializerWorksWithNoData())
+        var assertion = new OutputDeserializableToMock(
+            shouldPassAssertion
+                ? new MockDeserializerWorksWithAllData()
+                : new MockDeserializerWorksWithNoData()
+        )
         {
             Context = new Context { Logger = Globals.Logger },
-            Configuration = configurations
+            Configuration = configurations,
         };
 
         // Act
@@ -89,10 +78,10 @@ public class OutputDeserializableToTests
                     Name = outputName,
                     Data = new List<DetailedData<object>>
                     {
-                        new() { Body = System.Text.Encoding.UTF8.GetBytes("{\"id\":1}") }
-                    }
-                }
-            }
+                        new() { Body = System.Text.Encoding.UTF8.GetBytes("{\"id\":1}") },
+                    },
+                },
+            },
         };
         var assertion = new QaaS.Common.Assertions.DeserializationLogic.OutputDeserializableTo
         {
@@ -100,14 +89,14 @@ public class OutputDeserializableToTests
             Configuration = new OutputDeserializableToConfiguration
             {
                 OutputName = outputName,
-                Deserialize = new DeserializeConfig
-                {
-                    Deserializer = SerializationType.Json
-                }
-            }
+                Deserialize = new DeserializeConfig { Deserializer = SerializationType.Json },
+            },
         };
 
-        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+        var result = assertion.Assert(
+            new List<SessionData> { session }.ToImmutableList(),
+            ImmutableList<DataSource>.Empty
+        );
 
         Assert.That(result, Is.True);
     }
@@ -127,10 +116,10 @@ public class OutputDeserializableToTests
                     Data = new List<DetailedData<object>>
                     {
                         new() { Body = System.Text.Encoding.UTF8.GetBytes("{\"id\":1}") },
-                        new() { Body = System.Text.Encoding.UTF8.GetBytes("not-json") }
-                    }
-                }
-            }
+                        new() { Body = System.Text.Encoding.UTF8.GetBytes("not-json") },
+                    },
+                },
+            },
         };
         var assertion = new QaaS.Common.Assertions.DeserializationLogic.OutputDeserializableTo
         {
@@ -138,14 +127,14 @@ public class OutputDeserializableToTests
             Configuration = new OutputDeserializableToConfiguration
             {
                 OutputName = outputName,
-                Deserialize = new DeserializeConfig
-                {
-                    Deserializer = SerializationType.Json
-                }
-            }
+                Deserialize = new DeserializeConfig { Deserializer = SerializationType.Json },
+            },
         };
 
-        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+        var result = assertion.Assert(
+            new List<SessionData> { session }.ToImmutableList(),
+            ImmutableList<DataSource>.Empty
+        );
 
         Assert.That(result, Is.False);
         StringAssert.Contains("could not be deserialized", assertion.AssertionMessage!);

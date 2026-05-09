@@ -14,8 +14,9 @@ public static class JsonNodeExtensions
     public static object? GetFieldValueByPath(this JsonNode jsonNode, string jsonFieldPath)
     {
         var jsonPathObject = JsonPath.Parse(jsonFieldPath);
-        var jsonPathMatch = jsonPathObject.Evaluate(jsonNode).Matches!.FirstOrDefault() ??
-                            throw new ArgumentException($"Field not found for JSONPath given: {jsonFieldPath}");
+        var jsonPathMatch =
+            jsonPathObject.Evaluate(jsonNode).Matches!.FirstOrDefault()
+            ?? throw new ArgumentException($"Field not found for JSONPath given: {jsonFieldPath}");
         return jsonPathMatch.Value;
     }
 }

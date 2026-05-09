@@ -14,16 +14,26 @@ namespace QaaS.Common.Assertions.DeserializationLogic;
 /// deserializer
 /// </summary>
 /// <qaas-docs group="Contract validation" subgroup="Deserialization validation" />
-public class OutputDeserializableTo: BaseAssertion<OutputDeserializableToConfiguration>
+public class OutputDeserializableTo : BaseAssertion<OutputDeserializableToConfiguration>
 {
-   
     /// <inheritdoc />
-    public override bool Assert(IImmutableList<SessionData> sessionDataList, IImmutableList<DataSource> dataSourceList)
+    public override bool Assert(
+        IImmutableList<SessionData> sessionDataList,
+        IImmutableList<DataSource> dataSourceList
+    )
     {
         var sessionData = sessionDataList.AsSingle();
         var output = sessionData.GetOutputByName(Configuration.OutputName!);
-        var deserializer = DeserializerFactory.BuildDeserializer(Configuration.Deserialize!.Deserializer!.Value);
-        
+        var deserializer = DeserializerFactory.BuildDeserializer(
+            Configuration.Deserialize!.Deserializer
+        );
+
+        if (deserializer is null)
+            throw new InvalidOperationException(
+                $"DeserializerFactory returned null for deserializer type '{Configuration.Deserialize.Deserializer}'. "
+                    + "This is a configuration error — the assertion cannot run without a deserializer."
+            );
+
         var invalidOutputItemsCount = 0;
         var outputItemIndex = 0;
         var traceStringBuilder = new StringBuilder();
@@ -31,23 +41,28 @@ public class OutputDeserializableTo: BaseAssertion<OutputDeserializableToConfigu
         {
             try
             {
-                deserializer?.Deserialize(itemBody.Body,
+                deserializer.Deserialize(
+                    itemBody.Body,
                     Configuration.Deserialize.SpecificType != null
                         ? Configuration.Deserialize.SpecificType!.GetConfiguredType()
-                        : null);
+                        : null
+                );
             }
             catch (Exception e)
             {
-                traceStringBuilder.Append($"\nEncountered the following exception when trying to deserialize " +
-                                          $" output item at index {outputItemIndex}:\n{e}\n");
+                traceStringBuilder.Append(
+                    $"\nEncountered the following exception when trying to deserialize "
+                        + $" output item at index {outputItemIndex}:\n{e}\n"
+                );
                 invalidOutputItemsCount++;
             }
             outputItemIndex++;
         }
 
-        AssertionMessage = $"Out of {output.Data.Count} items in output {Configuration.OutputName!}, " +
-                           $"{invalidOutputItemsCount} could not be deserialized with the {Configuration.Deserialize.Deserializer!}" +
-                           " deserializer";
+        AssertionMessage =
+            $"Out of {output.Data.Count} items in output {Configuration.OutputName!}, "
+            + $"{invalidOutputItemsCount} could not be deserialized with the {Configuration.Deserialize.Deserializer}"
+            + " deserializer";
         AssertionTrace = traceStringBuilder.ToString();
         return invalidOutputItemsCount == 0;
     }

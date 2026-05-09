@@ -18,15 +18,22 @@ public record OutputContentByExpectedResultsConfiguration
     public string? OutputName { get; set; }
 
     [Description(
-        "The storage key of the dataSource item of the results. If no key was provided, takes the first item of from the DataSource")]
+        "The storage key of the dataSource item of the results. If no key was provided, takes the first item of from the DataSource"
+    )]
     public string? ResultsMetaDataStorageKey { get; set; }
 
     [Description(
-        "The name of the dataSource of the results item. If no name was provided, takes the first DataSource supplied")]
+        "The name of the dataSource of the results item. If no name was provided, takes the first DataSource supplied"
+    )]
     public string? DataSourceName { get; set; }
 
-    [Required, Description("The mapping for each column's name in the outputs results and its matchig field's path " +
-                           "in the output json.")]
+    [
+        Required,
+        Description(
+            "The mapping for each column's name in the outputs results and its matchig field's path "
+                + "in the output json."
+        )
+    ]
     public Dictionary<string, FieldConfiguration>? ColumnNameToFieldPathMap { get; set; }
 
     [Description("The type of json converter to use for converting the output items")]
@@ -53,19 +60,27 @@ public record FieldValidationConfig
     [DefaultValue(FieldValidationType.ExactValue)]
     public FieldValidationType Type { get; set; } = FieldValidationType.ExactValue;
 
-    [RequiredIfAny(nameof(Type), FieldValidationType.ExactValue),
-     Description("Validates field by the exact value from the expected results")]
+    [
+        RequiredIfAny(nameof(Type), FieldValidationType.ExactValue),
+        Description("Validates field by the exact value from the expected results")
+    ]
     public ExactValueFieldValidatorConfig ExactValue { get; set; } = new();
-    
-    [RequiredIfAny(nameof(Type), FieldValidationType.ErrorRange),
-     Description("Validates field by an error range of the expected value")]
+
+    [
+        RequiredIfAny(nameof(Type), FieldValidationType.ErrorRange),
+        Description("Validates field by an error range of the expected value")
+    ]
     public ErrorRangeFieldValidatorConfig? ErrorRange { get; set; }
 
-    [RequiredIfAny(nameof(Type), FieldValidationType.ExactOverrideValue),
-     Description("Validates field by a value that overrides the expected value")]
+    [
+        RequiredIfAny(nameof(Type), FieldValidationType.ExactOverrideValue),
+        Description("Validates field by a value that overrides the expected value")
+    ]
     public ExactOverrideValueFieldValidatorConfig? ExactOverrideValue { get; set; }
 
-    [RequiredIfAny(nameof(Type), FieldValidationType.Base64ToHex),
-     Description("Validates field by converting the value from base64 to hex")]
+    [
+        RequiredIfAny(nameof(Type), FieldValidationType.Base64ToHex),
+        Description("Validates field by converting the value from base64 to hex")
+    ]
     public Base64ToHexFieldValidationConfig? Base64ToHex { get; set; }
 }

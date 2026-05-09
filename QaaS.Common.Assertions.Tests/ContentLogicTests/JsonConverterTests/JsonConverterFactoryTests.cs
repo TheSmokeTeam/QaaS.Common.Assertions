@@ -5,7 +5,6 @@ using QaaS.Common.Assertions.CommonAssertionsConfigs.ContentLogic;
 using QaaS.Common.Assertions.ContentLogic.JsonConversion.ConverterFactory;
 using QaaS.Common.Assertions.ContentLogic.JsonConversion.Converters;
 
-
 namespace QaaS.Common.Assertions.Tests.ContentLogicTests.JsonConverterTests;
 
 [TestFixture]
@@ -13,12 +12,9 @@ public class JsonConverterFactoryTests
 {
     private static IEnumerable<TestCaseData> _converterTypes = new[]
     {
-        new TestCaseData(JsonConverterType.Json, typeof(JsonToJsonConverter))
-            .SetName("Json"),
-        new TestCaseData(JsonConverterType.Xml, typeof(XmlToJsonConverter))
-            .SetName("Xml"),
-        new TestCaseData(JsonConverterType.Object, typeof(ObjectToJsonConverter))
-            .SetName("Yaml"),
+        new TestCaseData(JsonConverterType.Json, typeof(JsonToJsonConverter)).SetName("Json"),
+        new TestCaseData(JsonConverterType.Xml, typeof(XmlToJsonConverter)).SetName("Xml"),
+        new TestCaseData(JsonConverterType.Object, typeof(ObjectToJsonConverter)).SetName("Yaml"),
     };
 
     private static readonly JsonConverterFactory Factory = new();
@@ -37,6 +33,7 @@ public class JsonConverterFactoryTests
     public void TestBuildJsonConverter_WhenTypeIsUnsupported_ThrowsNotSupportedException()
     {
         Assert.Throws<NotSupportedException>(() =>
-            Factory.BuildJsonConverter((JsonConverterType)1000));
+            Factory.BuildJsonConverter((JsonConverterType)1000)
+        );
     }
 }

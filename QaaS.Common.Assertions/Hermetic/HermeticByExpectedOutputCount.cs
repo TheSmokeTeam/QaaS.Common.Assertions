@@ -11,15 +11,23 @@ namespace QaaS.Common.Assertions.Hermetic;
 /// Performs a hermetic test by comparing the count of a given output in a session to a given expected count
 /// </summary>
 /// <qaas-docs group="Hermeticity" subgroup="Exact output count" />
-public class HermeticByExpectedOutputCount : BaseAssertion<HermeticByExpectedOutputCountConfiguration>
+public class HermeticByExpectedOutputCount
+    : BaseAssertion<HermeticByExpectedOutputCountConfiguration>
 {
     /// <inheritdoc />
-    public override bool Assert(IImmutableList<SessionData> sessionDataList, IImmutableList<DataSource> dataSourceList)
+    public override bool Assert(
+        IImmutableList<SessionData> sessionDataList,
+        IImmutableList<DataSource> dataSourceList
+    )
     {
-        var outputCount = Configuration.OutputNames!.Sum(output => sessionDataList.Sum(sessionData =>
-            sessionData.TryGetOutputByName(output, out var data) ? data!.Data.Count : 0));
-        AssertionMessage = $"Sum of outputs {string.Join(", ", Configuration.OutputNames!)} count is " +
-                           $"{outputCount}, expected {Configuration.ExpectedCount}";
+        var outputCount = Configuration.OutputNames!.Sum(output =>
+            sessionDataList.Sum(sessionData =>
+                sessionData.TryGetOutputByName(output, out var data) ? data!.Data.Count : 0
+            )
+        );
+        AssertionMessage =
+            $"Sum of outputs {string.Join(", ", Configuration.OutputNames!)} count is "
+            + $"{outputCount}, expected {Configuration.ExpectedCount}";
         return outputCount == Configuration.ExpectedCount;
     }
 }

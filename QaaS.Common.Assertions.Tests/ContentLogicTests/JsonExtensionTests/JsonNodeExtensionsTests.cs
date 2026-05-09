@@ -16,21 +16,16 @@ public class JsonNodeExtensionsTests
         { "age", "20" },
         { "gender", "female" },
         {
-            "address", new JsonObject()
-            {
-                { "city", "Boston" }
-            }
-        }
+            "address",
+            new JsonObject() { { "city", "Boston" } }
+        },
     };
 
     private static IEnumerable<TestCaseData> _validJsonPaths = new[]
     {
-        new TestCaseData("$.gender", "female")
-            .SetName("ValidPath"),
-        new TestCaseData("$.address.city", "Boston")
-            .SetName("ValidPath2"),
+        new TestCaseData("$.gender", "female").SetName("ValidPath"),
+        new TestCaseData("$.address.city", "Boston").SetName("ValidPath2"),
     };
-
 
     [Test, TestCase("$.blah"), TestCase("$.address.blah")]
     public void TestGetFieldValueByPath_TryToGetValue_ThrowsArgumentException(string fieldPath)
@@ -43,7 +38,10 @@ public class JsonNodeExtensionsTests
     }
 
     [Test, TestCase("hi", "Path must start with '$'"), TestCase("", "Input string is empty")]
-    public void TestGetFieldValueByPath_TryToGetValue_ThrowsPathParseException(string fieldPath, string expectedExcMsg)
+    public void TestGetFieldValueByPath_TryToGetValue_ThrowsPathParseException(
+        string fieldPath,
+        string expectedExcMsg
+    )
     {
         var ex = Assert.Throws<PathParseException>(() => Json.GetFieldValueByPath(fieldPath));
         if (ex != null)
@@ -53,7 +51,10 @@ public class JsonNodeExtensionsTests
     }
 
     [Test, TestCaseSource(nameof(_validJsonPaths))]
-    public void TestGetFieldValueByPath_TryToGetValue_ReturnsTheExpectedValue(string fieldPath, string resultInJson)
+    public void TestGetFieldValueByPath_TryToGetValue_ReturnsTheExpectedValue(
+        string fieldPath,
+        string resultInJson
+    )
     {
         var result = Json.GetFieldValueByPath(fieldPath)!.ToString();
         Assert.That(result! == resultInJson);

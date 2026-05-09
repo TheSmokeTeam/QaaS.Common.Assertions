@@ -20,25 +20,33 @@ namespace QaaS.Common.Assertions.Tests.DelayTests;
 [TestFixture]
 public class DelayByChunksTests
 {
-    private static readonly MethodInfo? MultipleInputsToMultipleOutputsChunkCountMethod = typeof(DelayByChunks)
-        .GetMethod("MultipleInputsToMultipleOutputsChunkCount", 
-            BindingFlags.Instance | BindingFlags.NonPublic);
+    private static readonly MethodInfo? MultipleInputsToMultipleOutputsChunkCountMethod =
+        typeof(DelayByChunks).GetMethod(
+            "MultipleInputsToMultipleOutputsChunkCount",
+            BindingFlags.Instance | BindingFlags.NonPublic
+        );
 
     private static readonly MethodInfo? GetListOfChunkTimesMethod = typeof(DelayByChunks)
-        .GetMethod("GetListOfChunkTimes", 
-        BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(byte[]));
+        .GetMethod("GetListOfChunkTimes", BindingFlags.Static | BindingFlags.NonPublic)!
+        .MakeGenericMethod(typeof(byte[]));
 
-    private static List<DetailedData<object>> CreateDetailedDataList(int listSize, long baseDateTimeTicks, int timeDifferenceMs = 0)
+    private static List<DetailedData<object>> CreateDetailedDataList(
+        int listSize,
+        long baseDateTimeTicks,
+        int timeDifferenceMs = 0
+    )
     {
         var list = new List<DetailedData<object>>(listSize);
         var offsetTicks = timeDifferenceMs * 10_000L;
         for (var index = 0; index < listSize; index++)
         {
-            list.Add(new DetailedData<object>
-            {
-                Body = null,
-                Timestamp = new DateTime(baseDateTimeTicks + index + offsetTicks)
-            });
+            list.Add(
+                new DetailedData<object>
+                {
+                    Body = null,
+                    Timestamp = new DateTime(baseDateTimeTicks + index + offsetTicks),
+                }
+            );
         }
 
         return list;
@@ -49,138 +57,176 @@ public class DelayByChunksTests
         const long baseDateTimeTicks = 10_000_000_000_000;
         var detailedDataList = new List<DetailedData<byte[]>>
         {
-            new (){Body = Array.Empty<byte>(), Timestamp = new DateTime(
-                baseDateTimeTicks + 0)},
-            new (){Body = Array.Empty<byte>(), Timestamp = new DateTime(
-                baseDateTimeTicks + 2)},
-            new (){Body = Array.Empty<byte>(), Timestamp = new DateTime(
-                baseDateTimeTicks + 4)},
-            new (){Body = Array.Empty<byte>(), Timestamp = new DateTime(
-                baseDateTimeTicks + 6)},
-            new (){Body = Array.Empty<byte>(), Timestamp = new DateTime(
-                baseDateTimeTicks + 8)},
-            new (){Body = Array.Empty<byte>(), Timestamp = new DateTime(
-                baseDateTimeTicks + 10)}
+            new() { Body = Array.Empty<byte>(), Timestamp = new DateTime(baseDateTimeTicks + 0) },
+            new() { Body = Array.Empty<byte>(), Timestamp = new DateTime(baseDateTimeTicks + 2) },
+            new() { Body = Array.Empty<byte>(), Timestamp = new DateTime(baseDateTimeTicks + 4) },
+            new() { Body = Array.Empty<byte>(), Timestamp = new DateTime(baseDateTimeTicks + 6) },
+            new() { Body = Array.Empty<byte>(), Timestamp = new DateTime(baseDateTimeTicks + 8) },
+            new() { Body = Array.Empty<byte>(), Timestamp = new DateTime(baseDateTimeTicks + 10) },
         };
-        yield return new TestCaseData(2, ChunkTimeOption.Average, detailedDataList, new List<DateTime>()
-        {
-            new(baseDateTimeTicks + 1),
-            new(baseDateTimeTicks + 5),
-            new(baseDateTimeTicks + 9)
-        }).SetName("WithAverageChunkTimeOption");
-        yield return new TestCaseData(2, ChunkTimeOption.First, detailedDataList, new List<DateTime>()
-        {
-            new(baseDateTimeTicks + 0),
-            new(baseDateTimeTicks + 4),
-            new(baseDateTimeTicks + 8)
-        }).SetName("WithFirstChunkTimeOption");
-        yield return new TestCaseData(2, ChunkTimeOption.Last, detailedDataList, new List<DateTime>()
-        {
-            new(baseDateTimeTicks + 2),
-            new(baseDateTimeTicks + 6),
-            new(baseDateTimeTicks + 10)
-        }).SetName("WithLastChunkTimeOption");
+        yield return new TestCaseData(
+            2,
+            ChunkTimeOption.Average,
+            detailedDataList,
+            new List<DateTime>()
+            {
+                new(baseDateTimeTicks + 1),
+                new(baseDateTimeTicks + 5),
+                new(baseDateTimeTicks + 9),
+            }
+        ).SetName("WithAverageChunkTimeOption");
+        yield return new TestCaseData(
+            2,
+            ChunkTimeOption.First,
+            detailedDataList,
+            new List<DateTime>()
+            {
+                new(baseDateTimeTicks + 0),
+                new(baseDateTimeTicks + 4),
+                new(baseDateTimeTicks + 8),
+            }
+        ).SetName("WithFirstChunkTimeOption");
+        yield return new TestCaseData(
+            2,
+            ChunkTimeOption.Last,
+            detailedDataList,
+            new List<DateTime>()
+            {
+                new(baseDateTimeTicks + 2),
+                new(baseDateTimeTicks + 6),
+                new(baseDateTimeTicks + 10),
+            }
+        ).SetName("WithLastChunkTimeOption");
     }
-    
+
     [Test, TestCaseSource(nameof(TestGetListOfChunkTimesCaseSource))]
-    public void
-        TestGetListOfChunkTimes_CallFunctionWithDifferentChunkTimeOptions_ShouldOutputExpectedTimeList(
-            int chunkSize, ChunkTimeOption chunkTimeOption, List<DetailedData<byte[]>> list, List<DateTime> expectedOutputList)
+    public void TestGetListOfChunkTimes_CallFunctionWithDifferentChunkTimeOptions_ShouldOutputExpectedTimeList(
+        int chunkSize,
+        ChunkTimeOption chunkTimeOption,
+        List<DetailedData<byte[]>> list,
+        List<DateTime> expectedOutputList
+    )
     {
         // Act
-        var chunkTimesList = (List<DateTime>)GetListOfChunkTimesMethod!.Invoke(null, 
-            new object?[] { list, chunkSize, chunkTimeOption })!;
-        
+        var chunkTimesList =
+            (List<DateTime>)
+                GetListOfChunkTimesMethod!.Invoke(
+                    null,
+                    new object?[] { list, chunkSize, chunkTimeOption }
+                )!;
+
         // Assert
-        CollectionAssert.AreEqual(expectedOutputList.Select(time => (long)(time - new DateTime(0)).TotalMilliseconds), 
-            chunkTimesList.Select(time => (long)(time - new DateTime(0)).TotalMilliseconds));
+        CollectionAssert.AreEqual(
+            expectedOutputList.Select(time => (long)(time - new DateTime(0)).TotalMilliseconds),
+            chunkTimesList.Select(time => (long)(time - new DateTime(0)).TotalMilliseconds)
+        );
     }
-    
-    [Test,
-    TestCase(1, 0, ChunkTimeOption.Average),
-    TestCase(1, 0, ChunkTimeOption.First),
-    TestCase(1, 0, ChunkTimeOption.Last),
-    TestCase(1, 1, ChunkTimeOption.Average),
-    TestCase(1, 1, ChunkTimeOption.First),
-    TestCase(1, 1, ChunkTimeOption.Last),
-    TestCase(4, 1, ChunkTimeOption.Average),
-    TestCase(4, 1, ChunkTimeOption.First),
-    TestCase(4, 1, ChunkTimeOption.Last),
-    TestCase(1, 16, ChunkTimeOption.Average),
-    TestCase(1, 16, ChunkTimeOption.First),
-    TestCase(1, 16, ChunkTimeOption.Last),
-    TestCase(4, 16, ChunkTimeOption.Average),
-    TestCase(4, 16, ChunkTimeOption.First),
-    TestCase(4, 16, ChunkTimeOption.Last)]
-    public void
-        TestGetListOfChunkTimes_CallFunctionWithDifferentChunkTimeOptionsChunkSizesAndListSizes_ShouldAlwaysOutputTheExpectedAmountOfTimeStamps(
-            int chunkSize, int listSize, ChunkTimeOption chunkTimeOption)
+
+    [
+        Test,
+        TestCase(1, 0, ChunkTimeOption.Average),
+        TestCase(1, 0, ChunkTimeOption.First),
+        TestCase(1, 0, ChunkTimeOption.Last),
+        TestCase(1, 1, ChunkTimeOption.Average),
+        TestCase(1, 1, ChunkTimeOption.First),
+        TestCase(1, 1, ChunkTimeOption.Last),
+        TestCase(4, 1, ChunkTimeOption.Average),
+        TestCase(4, 1, ChunkTimeOption.First),
+        TestCase(4, 1, ChunkTimeOption.Last),
+        TestCase(1, 16, ChunkTimeOption.Average),
+        TestCase(1, 16, ChunkTimeOption.First),
+        TestCase(1, 16, ChunkTimeOption.Last),
+        TestCase(4, 16, ChunkTimeOption.Average),
+        TestCase(4, 16, ChunkTimeOption.First),
+        TestCase(4, 16, ChunkTimeOption.Last)
+    ]
+    public void TestGetListOfChunkTimes_CallFunctionWithDifferentChunkTimeOptionsChunkSizesAndListSizes_ShouldAlwaysOutputTheExpectedAmountOfTimeStamps(
+        int chunkSize,
+        int listSize,
+        ChunkTimeOption chunkTimeOption
+    )
     {
         // Arrange
         const long baseDateTimeTicks = 10_000_000_000_000;
         var list = new List<DetailedData<byte[]>>(listSize);
         for (var listIndex = 0; listIndex < listSize; listIndex++)
         {
-            list.Add(new DetailedData<byte[]>{Body = null, Timestamp = new DateTime(
-                baseDateTimeTicks + listIndex)});
+            list.Add(
+                new DetailedData<byte[]>
+                {
+                    Body = null,
+                    Timestamp = new DateTime(baseDateTimeTicks + listIndex),
+                }
+            );
         }
-        
+
         // Act
-        var chunkTimesList = (List<DateTime>)GetListOfChunkTimesMethod!.Invoke(null, new object?[] { list, chunkSize, chunkTimeOption })!;
-        
+        var chunkTimesList =
+            (List<DateTime>)
+                GetListOfChunkTimesMethod!.Invoke(
+                    null,
+                    new object?[] { list, chunkSize, chunkTimeOption }
+                )!;
+
         // Assert
-        Assert.AreEqual(listSize/chunkSize, chunkTimesList.Count);
+        Assert.AreEqual(listSize / chunkSize, chunkTimesList.Count);
     }
-    
-    [Test,
-    TestCase(2000, 3, 6, 2, 4, 0, 4000),
-    TestCase(2000, 3, 6, 2, 4, 2, 1000),
-    TestCase(2000, 3, 6, 2, 4, 2, -50),
-    TestCase(2000, 3, 6, 2, 4, 2, -2000, 2500)]
-    public void
-        TestMultipleInputsToMultipleOutputsChunkCount_CallFunctionWithDifferentParameters_ShouldGetTheSameAsExpectedOutputChunksCountVariable(
-            long maximumDelayMilliSeconds, int inputChunkSize, int inputListSize, int outputChunkSize,
-            int outputListSize, int expectedOutputChunksCount,
-            int timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds, int maximumNegativeDelay = 100)
+
+    [
+        Test,
+        TestCase(2000, 3, 6, 2, 4, 0, 4000),
+        TestCase(2000, 3, 6, 2, 4, 2, 1000),
+        TestCase(2000, 3, 6, 2, 4, 2, -50),
+        TestCase(2000, 3, 6, 2, 4, 2, -2000, 2500)
+    ]
+    public void TestMultipleInputsToMultipleOutputsChunkCount_CallFunctionWithDifferentParameters_ShouldGetTheSameAsExpectedOutputChunksCountVariable(
+        long maximumDelayMilliSeconds,
+        int inputChunkSize,
+        int inputListSize,
+        int outputChunkSize,
+        int outputListSize,
+        int expectedOutputChunksCount,
+        int timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds,
+        int maximumNegativeDelay = 100
+    )
     {
         // Arrange
         const string name = "test";
         const long baseDateTimeTicksToNotReachNegativeDelay = 10_000_000_000_000;
-        var inputList = CreateDetailedDataList(inputListSize, baseDateTimeTicksToNotReachNegativeDelay);
+        var inputList = CreateDetailedDataList(
+            inputListSize,
+            baseDateTimeTicksToNotReachNegativeDelay
+        );
         var outputList = CreateDetailedDataList(
             outputListSize,
             baseDateTimeTicksToNotReachNegativeDelay,
-            timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds);
-        
+            timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds
+        );
+
         var configurations = new DelayByChunksConfiguration
         {
-            Output = new Chunk
-            {
-                Name = name ,
-                ChunkSize = outputChunkSize
-            },
-            Input = new Chunk
-            {
-                Name = name,
-                ChunkSize = inputChunkSize
-            },
+            Output = new Chunk { Name = name, ChunkSize = outputChunkSize },
+            Input = new Chunk { Name = name, ChunkSize = inputChunkSize },
             MaximumDelayMs = maximumDelayMilliSeconds,
-            MaximumNegativeDelayBufferMs = maximumNegativeDelay
+            MaximumNegativeDelayBufferMs = maximumNegativeDelay,
         };
         var assertion = new DelayByChunks
         {
-            Context = new Context{Logger = Globals.Logger},
-            Configuration = configurations
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = configurations,
         };
-        
+
         // Act
-        var testResult =
-            (int)MultipleInputsToMultipleOutputsChunkCountMethod!.Invoke(assertion, new object?[] { inputList, outputList })!;
+        var testResult = (int)
+            MultipleInputsToMultipleOutputsChunkCountMethod!.Invoke(
+                assertion,
+                new object?[] { inputList, outputList }
+            )!;
 
         // Assert
         Assert.AreEqual(expectedOutputChunksCount, testResult);
     }
-    
+
     [Test]
     public void TestAssertSingleSession_CallFunctionWithEmptyInputList_FunctionShouldThrowException()
     {
@@ -194,104 +240,91 @@ public class DelayByChunksTests
             Name = "Id",
             Inputs = new List<CommunicationData<object>>
             {
-                new() { Name = name, Data = new List<DetailedData<object>>() }
+                new() { Name = name, Data = new List<DetailedData<object>>() },
             },
             Outputs = new List<CommunicationData<object>>
             {
-                new() { Name = name, Data = new List<DetailedData<object>>() }
-            }
+                new() { Name = name, Data = new List<DetailedData<object>>() },
+            },
         };
         var configurations = new DelayByChunksConfiguration
         {
-            Output = new Chunk
-            {
-                Name = name,
-                ChunkSize = outputChunkSize
-            },
-            Input = new Chunk
-            {
-                Name = name,
-                ChunkSize = inputChunkSize
-            },
-            MaximumDelayMs = maximumDelayMilliSeconds
+            Output = new Chunk { Name = name, ChunkSize = outputChunkSize },
+            Input = new Chunk { Name = name, ChunkSize = inputChunkSize },
+            MaximumDelayMs = maximumDelayMilliSeconds,
         };
-        var sessionList = new List<SessionData>
-        {
-            session
-        }.ToImmutableList();
+        var sessionList = new List<SessionData> { session }.ToImmutableList();
         var assertion = new DelayByChunks
         {
-            Context = new Context{Logger = Globals.Logger},
-            Configuration = configurations
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = configurations,
         };
-        
+
         // Act
 
         // Assert
         Assert.Throws<EmptyInputListException>(() =>
-           assertion.Assert(sessionList, new ImmutableArray<DataSource>()));
+            assertion.Assert(sessionList, new ImmutableArray<DataSource>())
+        );
     }
-    
+
     [Test]
-    [TestCase(2000,2,4,3,6,2000)]
-    [TestCase(5000,65,32500,97,48500,2500)]
-    [TestCase(2000,3,3,2,2,2000)]
-    public void
-    TestAssertSingleSession_CallFunctionWithDifferentParametersWithNegativeDelayAndWithNegativeDelayBuffer0_ShouldThrowNegativeDelayException(
-        long maximumDelayMilliSeconds, int inputChunkSize, int inputListSize, int outputChunkSize,
+    [TestCase(2000, 2, 4, 3, 6, 2000)]
+    [TestCase(5000, 65, 32500, 97, 48500, 2500)]
+    [TestCase(2000, 3, 3, 2, 2, 2000)]
+    public void TestAssertSingleSession_CallFunctionWithDifferentParametersWithNegativeDelayAndWithNegativeDelayBuffer0_ShouldThrowNegativeDelayException(
+        long maximumDelayMilliSeconds,
+        int inputChunkSize,
+        int inputListSize,
+        int outputChunkSize,
         int outputListSize,
-        int timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds)
+        int timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds
+    )
     {
         // Arrange
         const string name = "test";
         const long baseDateTimeTicksToNotReachNegativeDelay = 10_000_000_000_000;
-        var outputList = CreateDetailedDataList(outputListSize, baseDateTimeTicksToNotReachNegativeDelay);
+        var outputList = CreateDetailedDataList(
+            outputListSize,
+            baseDateTimeTicksToNotReachNegativeDelay
+        );
         var inputList = CreateDetailedDataList(
             inputListSize,
             baseDateTimeTicksToNotReachNegativeDelay,
-            timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds);
+            timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds
+        );
         var session = new SessionData
         {
             Name = "Id",
             Inputs = new List<CommunicationData<object>>
             {
-                new() { Name = name, Data = inputList }
+                new() { Name = name, Data = inputList },
             },
             Outputs = new List<CommunicationData<object>>
             {
-                new() { Name = name, Data = outputList }
-            }
+                new() { Name = name, Data = outputList },
+            },
         };
-        var sessionList = new List<SessionData>()
-        {
-            session
-        }.ToImmutableList();
+        var sessionList = new List<SessionData>() { session }.ToImmutableList();
         var configurations = new DelayByChunksConfiguration
         {
-            Output = new Chunk
-            {
-                Name = name,
-                ChunkSize = outputChunkSize
-            },
-            Input = new Chunk
-            {
-                Name = name,
-                ChunkSize = inputChunkSize
-            },
+            Output = new Chunk { Name = name, ChunkSize = outputChunkSize },
+            Input = new Chunk { Name = name, ChunkSize = inputChunkSize },
             MaximumDelayMs = maximumDelayMilliSeconds,
-            MaximumNegativeDelayBufferMs = 0
+            MaximumNegativeDelayBufferMs = 0,
         };
         var assertion = new DelayByChunks
         {
-            Context = new Context{Logger = Globals.Logger},
-            Configuration = configurations
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = configurations,
         };
-        
+
         // Act + Assert
         Assert.Throws<NegativeDelayException>(() =>
-            assertion.Assert(sessionList, new ImmutableArray<DataSource>()));
+            assertion.Assert(sessionList, new ImmutableArray<DataSource>())
+        );
     }
-    
+
     [Test]
     [TestCase(2000, 1, 3, 1, 3, true, 1000)]
     [TestCase(2000, 2, 4, 0, 6, true, 1000)]
@@ -310,67 +343,67 @@ public class DelayByChunksTests
     [TestCase(5000, 65, 26000, 97, 48500, true, 2500)]
     [TestCase(2000, 3, 15, 1, 5, true, -50)]
     [TestCase(2000, 3, 15, 1, 5, true, -2000, 2500)]
-    public void
-        TestChunksArriveOnTime_CallFunctionUsingDetailedMessageListsWithDifferentParameters_ShouldReturnTheSameAsShouldArriveInTimeVariable
-        (long maximumDelayMilliSeconds, int inputChunkSize, int inputListSize, int outputChunkSize,
-            int outputListSize, bool shouldArriveInTime,
-            int timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds, int maximumAllowedNegativeDelayMs = 100)
+    public void TestChunksArriveOnTime_CallFunctionUsingDetailedMessageListsWithDifferentParameters_ShouldReturnTheSameAsShouldArriveInTimeVariable(
+        long maximumDelayMilliSeconds,
+        int inputChunkSize,
+        int inputListSize,
+        int outputChunkSize,
+        int outputListSize,
+        bool shouldArriveInTime,
+        int timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds,
+        int maximumAllowedNegativeDelayMs = 100
+    )
     {
         // Arrange
         const string name = "test";
         const long baseDateTimeTicksToNotReachNegativeDelay = 10_000_000_000_000;
-        
-        var inputList = CreateDetailedDataList(inputListSize, baseDateTimeTicksToNotReachNegativeDelay);
+
+        var inputList = CreateDetailedDataList(
+            inputListSize,
+            baseDateTimeTicksToNotReachNegativeDelay
+        );
         var outputList = CreateDetailedDataList(
             outputListSize,
             baseDateTimeTicksToNotReachNegativeDelay,
-            timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds);
+            timeDifferenceBetweenCreatingInputAndOutputListsMilliSeconds
+        );
         var session = new SessionData
         {
             Name = "Id",
             Inputs = new List<CommunicationData<object>>
             {
-                new() { Name = name, Data = inputList }
+                new() { Name = name, Data = inputList },
             },
             Outputs = new List<CommunicationData<object>>
             {
-                new() { Name = name, Data = outputList }
-            }
+                new() { Name = name, Data = outputList },
+            },
         };
-        var sessionList = new List<SessionData>()
-        {
-            session
-        }.ToImmutableList();
+        var sessionList = new List<SessionData>() { session }.ToImmutableList();
         var configurations = new DelayByChunksConfiguration
         {
-            Output = new Chunk
-            {
-                Name = name,
-                ChunkSize = outputChunkSize
-            },
-            Input = new Chunk
-            {
-                Name = name,
-                ChunkSize = inputChunkSize
-            },
+            Output = new Chunk { Name = name, ChunkSize = outputChunkSize },
+            Input = new Chunk { Name = name, ChunkSize = inputChunkSize },
             MaximumDelayMs = maximumDelayMilliSeconds,
-            MaximumNegativeDelayBufferMs = maximumAllowedNegativeDelayMs
+            MaximumNegativeDelayBufferMs = maximumAllowedNegativeDelayMs,
         };
         var assertion = new DelayByChunks
         {
-            Context = new Context{Logger = Globals.Logger},
-            Configuration = configurations
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = configurations,
         };
-        
+
         // Act
         var testResult = assertion.Assert(sessionList, new ImmutableArray<DataSource>());
 
         // Assert
         Assert.That(testResult == shouldArriveInTime);
         if (outputChunkSize > 0 && outputListSize > 0)
-            StringAssert.Contains($"Expected {inputList.Count / inputChunkSize} output chunks" +
-                              $" to arrive in under {maximumDelayMilliSeconds} milliseconds", 
-            assertion.AssertionMessage!);
+            StringAssert.Contains(
+                $"Expected {inputList.Count / inputChunkSize} output chunks"
+                    + $" to arrive in under {maximumDelayMilliSeconds} milliseconds",
+                assertion.AssertionMessage!
+            );
     }
 
     [Test]
@@ -378,11 +411,15 @@ public class DelayByChunksTests
     {
         var list = new List<DetailedData<byte[]>>
         {
-            new() { Body = Array.Empty<byte>(), Timestamp = DateTime.UtcNow }
+            new() { Body = Array.Empty<byte>(), Timestamp = DateTime.UtcNow },
         };
 
         var exception = Assert.Throws<TargetInvocationException>(() =>
-            GetListOfChunkTimesMethod!.Invoke(null, new object?[] { list, 0, ChunkTimeOption.First }));
+            GetListOfChunkTimesMethod!.Invoke(
+                null,
+                new object?[] { list, 0, ChunkTimeOption.First }
+            )
+        );
 
         Assert.That(exception!.InnerException, Is.TypeOf<ArgumentException>());
     }
@@ -397,36 +434,49 @@ public class DelayByChunksTests
             Data = new List<DetailedData<object>>
             {
                 new() { Body = null, Timestamp = new DateTime(1) },
-                new() { Body = null, Timestamp = new DateTime(2) }
-            }
+                new() { Body = null, Timestamp = new DateTime(2) },
+            },
         };
         var output = new CommunicationData<object>
         {
             Name = name,
             Data = new List<DetailedData<object>>
             {
-                new() { Body = null, Timestamp = new DateTime(3) }
-            }
+                new() { Body = null, Timestamp = new DateTime(3) },
+            },
         };
         var session = new SessionData
         {
             Name = "Id",
             Inputs = new List<CommunicationData<object>> { input },
-            Outputs = new List<CommunicationData<object>> { output }
+            Outputs = new List<CommunicationData<object>> { output },
         };
         var assertion = new DelayByChunks
         {
             Context = new Context { Logger = Globals.Logger },
             Configuration = new DelayByChunksConfiguration
             {
-                Input = new Chunk { Name = name, ChunkSize = 2, ChunkTimeOption = ChunkTimeOption.First },
-                Output = new Chunk { Name = name, ChunkSize = 2, ChunkTimeOption = ChunkTimeOption.First },
+                Input = new Chunk
+                {
+                    Name = name,
+                    ChunkSize = 2,
+                    ChunkTimeOption = ChunkTimeOption.First,
+                },
+                Output = new Chunk
+                {
+                    Name = name,
+                    ChunkSize = 2,
+                    ChunkTimeOption = ChunkTimeOption.First,
+                },
                 MaximumDelayMs = 1000,
-                MaximumNegativeDelayBufferMs = 100
-            }
+                MaximumNegativeDelayBufferMs = 100,
+            },
         };
 
-        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+        var result = assertion.Assert(
+            new List<SessionData> { session }.ToImmutableList(),
+            ImmutableList<DataSource>.Empty
+        );
 
         Assert.That(result, Is.False);
         StringAssert.Contains("Expected 1 output chunks", assertion.AssertionMessage!);
@@ -450,8 +500,8 @@ public class DelayByChunksTests
                         new() { Body = null, Timestamp = new DateTime(10_000) },
                         new() { Body = null, Timestamp = new DateTime(20_000) },
                         new() { Body = null, Timestamp = new DateTime(30_000) },
-                        new() { Body = null, Timestamp = new DateTime(40_000) }
-                    }
+                        new() { Body = null, Timestamp = new DateTime(40_000) },
+                    },
                 },
                 new()
                 {
@@ -459,10 +509,10 @@ public class DelayByChunksTests
                     Data = new List<DetailedData<object>>
                     {
                         new() { Body = null, Timestamp = new DateTime(20_000) },
-                        new() { Body = null, Timestamp = new DateTime(40_000) }
-                    }
-                }
-            }
+                        new() { Body = null, Timestamp = new DateTime(40_000) },
+                    },
+                },
+            },
         };
         var assertion = new DelayByChunks
         {
@@ -473,21 +523,24 @@ public class DelayByChunksTests
                 {
                     Name = inputAsOutputName,
                     ChunkSize = 2,
-                    ChunkTimeOption = ChunkTimeOption.Last
+                    ChunkTimeOption = ChunkTimeOption.Last,
                 },
                 InputsAreOutputs = true,
                 Output = new Chunk
                 {
                     Name = outputName,
                     ChunkSize = 1,
-                    ChunkTimeOption = ChunkTimeOption.Last
+                    ChunkTimeOption = ChunkTimeOption.Last,
                 },
                 MaximumDelayMs = 0,
-                MaximumNegativeDelayBufferMs = 0
-            }
+                MaximumNegativeDelayBufferMs = 0,
+            },
         };
 
-        var result = assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty);
+        var result = assertion.Assert(
+            new List<SessionData> { session }.ToImmutableList(),
+            ImmutableList<DataSource>.Empty
+        );
 
         Assert.That(result, Is.True);
         StringAssert.Contains("Expected 2 output chunks", assertion.AssertionMessage!);

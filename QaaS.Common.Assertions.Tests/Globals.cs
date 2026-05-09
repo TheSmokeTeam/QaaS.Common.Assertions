@@ -9,12 +9,8 @@ namespace QaaS.Common.Assertions.Tests;
 public static class Globals
 {
     public static readonly ILogger Logger = new SerilogLoggerFactory(
-        new LoggerConfiguration().MinimumLevel.Debug()
-            .WriteTo.NUnitOutput()
-            .CreateLogger()).CreateLogger("TestsLogger");
+        new LoggerConfiguration().MinimumLevel.Debug().WriteTo.NUnitOutput().CreateLogger()
+    ).CreateLogger("TestsLogger");
 
-    public static readonly Context Context = new Context
-    {
-        Logger = Logger
-    };
+    public static readonly Context Context = new Context { Logger = Logger };
 }
