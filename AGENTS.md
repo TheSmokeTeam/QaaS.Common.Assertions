@@ -14,7 +14,7 @@ tag-driven in CI) and consumed by Runner and user test projects.
 | Project | Purpose |
 |---|---|
 | `QaaS.Common.Assertions/` | Main library — 11 assertion hooks + config models |
-| `QaaS.Common.Assertions.Tests/` | NUnit 4.x test project; 70% line-coverage gate |
+| `QaaS.Common.Assertions.Tests/` | NUnit 4.x test project; coverage collected and reported |
 
 Assertion families:
 | Family | Classes |
@@ -32,7 +32,7 @@ dotnet build
 dotnet test
 dotnet test --collect:"XPlat Code Coverage"
 ```
-CI runs on `windows-latest`. Coverage collected via `dotnet-coverage collect`; minimum 70%.
+CI runs on `windows-latest`. Coverage collected via `dotnet-coverage collect` and reported; no minimum threshold enforced.
 
 ## Critical gotchas
 - **Assembly scanning contract**: hook classes MUST be public, non-abstract, and implement
@@ -52,6 +52,6 @@ CI runs on `windows-latest`. Coverage collected via `dotnet-coverage collect`; m
 ## Process
 - QaaS harness pipeline: plan → contract → implement → adversarial evaluation (rubric ≥7/10
   on Correctness / Completeness / Craft / Robustness).
-- TDD: write failing tests first; keep coverage ≥70%.
+- TDD: write failing tests first.
 - Conventional commits: `feat:`, `fix:`, `chore(release):`, scoped forms like `fix(ci):`.
-- `dotnet format` / csharpier clean before every commit.
+- `dotnet format` / `dotnet csharpier .` before every commit.
