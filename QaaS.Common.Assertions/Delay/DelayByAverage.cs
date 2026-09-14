@@ -15,6 +15,10 @@ namespace QaaS.Common.Assertions.Delay;
 /// Checks for delay between an input source to an output source by
 /// subtracting the average timestamp of all inputs from the average timestamp of all the outputs.
 /// </summary>
+/// <remarks>
+/// Combines data from matching input and output sources across all supplied sessions before calculating the averages.
+/// Sessions without a matching source are ignored for that side of the calculation.
+/// </remarks>
 /// <qaas-docs group="Latency" subgroup="Average latency" />
 public class DelayByAverage: BaseAssertion<DelayByAverageConfiguration>
 {
