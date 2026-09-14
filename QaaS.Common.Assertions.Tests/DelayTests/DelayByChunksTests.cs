@@ -492,4 +492,40 @@ public class DelayByChunksTests
         Assert.That(result, Is.True);
         StringAssert.Contains("Expected 2 output chunks", assertion.AssertionMessage!);
     }
+
+    [Test]
+    public void TestAssertMultipleSessions_ShouldUseConfiguredInputAndOutputFromAllSessions()
+    {
+        const string name = "test";
+        SessionData CreateSession(string sessionName, int delayMs) => new()
+        {
+            Name = sessionName,
+            Inputs = new List<CommunicationData<object>>
+            {
+                new() { Name = name, Data = new List<DetailedData<object>> { new() { Timestamp = new DateTime(1) } } }
+            },
+            Outputs = new List<CommunicationData<object>>
+            {
+                new() { Name = name, Data = new List<DetailedData<object>> { new() { Timestamp = new DateTime(1 + delayMs * 10_000L) } } }
+            }
+        };
+        var assertion = new DelayByChunks
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new DelayByChunksConfiguration
+            {
+                Input = new Chunk { Name = name, ChunkSize = 1 },
+                Output = new Chunk { Name = name, ChunkSize = 1 },
+                MaximumDelayMs = 1000,
+                MaximumNegativeDelayBufferMs = 0
+            }
+        };
+
+        var result = assertion.Assert(
+            new[] { CreateSession("First", 0), CreateSession("Second", 4000), new SessionData { Name = "Missing" } }
+                .ToImmutableList(),
+            ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.False);
+    }
 }

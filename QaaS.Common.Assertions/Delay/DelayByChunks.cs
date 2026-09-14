@@ -26,19 +26,19 @@ public class DelayByChunks: BaseAssertion<DelayByChunksConfiguration>
     /// <inheritdoc />
     public override bool Assert(IImmutableList<SessionData> sessionDataList, IImmutableList<DataSource> dataSourceList)
     {
-        var sessionData = sessionDataList.AsSingle();
-        var output = sessionData.GetOutputByName(Configuration.Output!.Name!);
-        var input = Configuration.InputsAreOutputs
-            ? sessionData.GetOutputByName(Configuration.Input!.Name!)
-            : sessionData.GetInputByName(Configuration.Input!.Name!);
-        var outputCount = output.Data.Count;
-        var inputCount = input.Data.Count;
+        var output = sessionDataList.SelectMany(sessionData =>
+            sessionData.TryGetOutputByName(Configuration.Output!.Name!, out var data) ? data!.Data : []).ToList();
+        var input = sessionDataList.SelectMany(sessionData => Configuration.InputsAreOutputs
+            ? sessionData.TryGetOutputByName(Configuration.Input!.Name!, out var outputData) ? outputData!.Data : []
+            : sessionData.TryGetInputByName(Configuration.Input!.Name!, out var inputData) ? inputData!.Data : []).ToList();
+        var outputCount = output.Count;
+        var inputCount = input.Count;
          
         // If there is no input delay cannot be measured and an exception is thrown
-        if (inputCount == 0) throw new EmptyInputListException($"No input items were found in input {input.Name}," +
+        if (inputCount == 0) throw new EmptyInputListException($"No input items were found in input {Configuration.Input!.Name}," +
                                                                     " cannot measure delay when no input was provided");
         // If there should be no output there is no delay to calculate and the "output" arrived on time
-        if (Configuration.Output.ChunkSize == 0)
+        if (Configuration.Output!.ChunkSize == 0)
         {
             AssertionMessage = "Output ChunkSize was configured as 0, meaning there is no delay to calculate";
             return true;
@@ -46,16 +46,15 @@ public class DelayByChunks: BaseAssertion<DelayByChunksConfiguration>
         // If there should be output but there is no output this immediately fails
         if (outputCount == 0)
         {
-            AssertionMessage = $"No output items were found in the output {output.Name}" +
+            AssertionMessage = $"No output items were found in the output {Configuration.Output.Name}" +
                                 " are you sure your input produces output? if its not supposed to " +
                                 "produce any output make sure to set Output.ChunkSize to 0";
             return false;
         }
         
-        var outputChunksCount = MultipleInputsToMultipleOutputsChunkCount((IReadOnlyList<DetailedData<object>>)input.Data,
-            (IReadOnlyList<DetailedData<object>>)output.Data);
+        var outputChunksCount = MultipleInputsToMultipleOutputsChunkCount(input, output);
         
-        var expectedOutputChunkCount = inputCount / Configuration.Input.ChunkSize;
+        var expectedOutputChunkCount = inputCount / Configuration.Input!.ChunkSize;
         AssertionMessage = $"Expected {expectedOutputChunkCount} output chunks" +
                            $" to arrive in under {Configuration.MaximumDelayMs} milliseconds," +
                            $" {outputChunksCount} actually arrived";

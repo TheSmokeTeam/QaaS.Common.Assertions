@@ -2,7 +2,6 @@ using System.Collections.Immutable;
 using System.Numerics;
 using System.Text;
 using Microsoft.Extensions.Logging;
-using MoreLinq;
 using QaaS.Common.Assertions.CommonAssertionsConfigs.Delay;
 using QaaS.Common.Assertions.Delay.Exceptions;
 using QaaS.Framework.SDK.DataSourceObjects;
@@ -25,27 +24,27 @@ public class DelayByAverage: BaseAssertion<DelayByAverageConfiguration>
     /// <inheritdoc />
     public override bool Assert(IImmutableList<SessionData> sessionDataList, IImmutableList<DataSource> dataSourceList)
     {
-        var sessionData = sessionDataList.AsSingle();
-        var output = sessionData.GetOutputByName(Configuration.OutputName!);
-        var input = Configuration.InputsAreOutputs
-            ? sessionData.GetOutputByName(Configuration.InputName!)
-            : sessionData.GetInputByName(Configuration.InputName!);
-        var outputCount = output.Data.Count;
-        var inputCount = input.Data.Count;
+        var output = sessionDataList.SelectMany(sessionData =>
+            sessionData.TryGetOutputByName(Configuration.OutputName!, out var data) ? data!.Data : []).ToList();
+        var input = sessionDataList.SelectMany(sessionData => Configuration.InputsAreOutputs
+            ? sessionData.TryGetOutputByName(Configuration.InputName!, out var outputData) ? outputData!.Data : []
+            : sessionData.TryGetInputByName(Configuration.InputName!, out var inputData) ? inputData!.Data : []).ToList();
+        var outputCount = output.Count;
+        var inputCount = input.Count;
          
         // If there is no input delay cannot be measured and an exception is thrown
-        if (inputCount == 0) throw new EmptyInputListException($"No input items were found in input {input.Name}," +
+        if (inputCount == 0) throw new EmptyInputListException($"No input items were found in input {Configuration.InputName}," +
                                                                " cannot measure delay when no input was provided");
         // If there no output arrived delay passes automatically
         if (outputCount == 0)
         {
-            AssertionMessage = $"No outputs found in {output.Name}, meaning there was no delay to be measured";
+            AssertionMessage = $"No outputs found in {Configuration.OutputName}, meaning there was no delay to be measured";
             return true;
         }
 
         // Get average input injection time (in milliseconds)
          BigInteger averageInputTime = 0;
-         input.Data.ForEach(item => averageInputTime += !item.Timestamp.HasValue ?
+         input.ForEach(item => averageInputTime += !item.Timestamp.HasValue ?
              throw new NotSupportedException("Encountered input with no timestamp, can't calculate delay. " +
                                              $"\n Input with no timestamp: {item.Body}") : 
              item.Timestamp.Value.Ticks / TimeSpan.TicksPerMillisecond);
@@ -54,7 +53,7 @@ public class DelayByAverage: BaseAssertion<DelayByAverageConfiguration>
              new DateTime(TimeSpan.FromMilliseconds((double)averageInputTime).Ticks).ToString(DateTimeLogFormat));
 
          BigInteger averageOutputTime = 0;
-         output.Data.ForEach(item => averageOutputTime += !item.Timestamp.HasValue ?
+         output.ForEach(item => averageOutputTime += !item.Timestamp.HasValue ?
              throw new NotSupportedException("Encountered output with no timestamp, can't calculate delay. " +
                                              $"\n Output with no timestamp: {item.Body}") : 
              item.Timestamp.Value.Ticks  / TimeSpan.TicksPerMillisecond);
