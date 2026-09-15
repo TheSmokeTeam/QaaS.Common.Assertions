@@ -450,4 +450,39 @@ public class DelayByAverageTests
         Assert.Throws<NotSupportedException>(() =>
             assertion.Assert(new List<SessionData> { session }.ToImmutableList(), ImmutableList<DataSource>.Empty));
     }
+
+    [Test]
+    public void TestAssertMultipleSessions_ShouldUseConfiguredInputAndOutputFromAllSessions()
+    {
+        const string name = "Test";
+        SessionData CreateSession(string sessionName, int delayMs) => new()
+        {
+            Name = sessionName,
+            Inputs = new List<CommunicationData<object>>
+            {
+                new() { Name = name, Data = new List<DetailedData<object>> { new() { Timestamp = new DateTime(1) } } }
+            },
+            Outputs = new List<CommunicationData<object>>
+            {
+                new() { Name = name, Data = new List<DetailedData<object>> { new() { Timestamp = new DateTime(1 + delayMs * 10_000L) } } }
+            }
+        };
+        var assertion = new DelayByAverage
+        {
+            Context = new Context { Logger = Globals.Logger },
+            Configuration = new DelayByAverageConfiguration
+            {
+                InputName = name,
+                OutputName = name,
+                MaximumDelayMs = 1000
+            }
+        };
+
+        var result = assertion.Assert(
+            new[] { CreateSession("First", 0), CreateSession("Second", 4000), new SessionData { Name = "Missing" } }
+                .ToImmutableList(),
+            ImmutableList<DataSource>.Empty);
+
+        Assert.That(result, Is.False);
+    }
 }
