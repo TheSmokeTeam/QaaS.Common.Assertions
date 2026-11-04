@@ -31,6 +31,10 @@ env:
 
 jobs:
   build-test-deploy:
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write
     name: Build, Test & Deploy
     runs-on: windows-latest
     steps:
@@ -305,6 +309,13 @@ jobs:
             Copy-Item $packageFile.FullName $versionDirectory -Force
           }
 
+      - name: Authenticate to NuGet
+        if: steps.stable_tag.outputs.is_stable_tag == 'true' || github.event_name == 'workflow_dispatch'
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        id: nuget_login
+        with:
+          user: Smoke
+
       - name: Push QaaS.Common.Assertions to NuGet
         if: steps.stable_tag.outputs.is_stable_tag == 'true'
         shell: powershell
@@ -313,7 +324,7 @@ jobs:
           foreach ($package in $packages) {
             # Only push the main QaaS.Common.Assertions package, not QaaS.Common.Assertions.* (e.g., QaaS.Common.Assertions.Tests)
             if ($package.Name -match "^QaaS\.Common\.Assertions\.[0-9]") {
-            dotnet nuget push $package.FullName -k ${{ secrets.NUGET_AUTH_TOKEN }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+            dotnet nuget push $package.FullName -k ${{ steps.nuget_login.outputs.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
             }
           }
 
